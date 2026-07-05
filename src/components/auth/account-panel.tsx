@@ -11,7 +11,7 @@ export function AccountPanel() {
       <section className="page-shell">
         <fieldset className="plain-fieldset">
           <legend>Account</legend>
-          <p>Loading account...</p>
+          <p>...</p>
         </fieldset>
       </section>
     );

@@ -2,19 +2,45 @@
 
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
+
+function isActivePath(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function HeaderAuth() {
+  const pathname = usePathname();
   const { isLoaded, isSignedIn, user } = useUser();
 
   if (!isLoaded) {
-    return <span className="header-auth">checking account...</span>;
+    return (
+      <span className="header-auth" data-dev-outline="header-auth-loading">
+        ...
+      </span>
+    );
   }
 
   if (!isSignedIn) {
     return (
-      <nav className="header-auth" aria-label="account">
-        <Link href="/sign-in">sign in</Link>
-        <Link href="/sign-up">sign up</Link>
+      <nav
+        aria-label="account"
+        className="header-auth"
+        data-dev-outline="header-auth"
+      >
+        <Link
+          aria-current={isActivePath(pathname, "/sign-in") ? "page" : undefined}
+          data-dev-outline="header-auth-sign-in"
+          href="/sign-in"
+        >
+          sign in
+        </Link>
+        <Link
+          aria-current={isActivePath(pathname, "/sign-up") ? "page" : undefined}
+          data-dev-outline="header-auth-sign-up"
+          href="/sign-up"
+        >
+          sign up
+        </Link>
       </nav>
     );
   }
@@ -26,8 +52,17 @@ export function HeaderAuth() {
     "signed in";
 
   return (
-    <nav className="header-auth" aria-label="account">
-      <Link href="/account" title={label}>
+    <nav
+      aria-label="account"
+      className="header-auth"
+      data-dev-outline="header-auth"
+    >
+      <Link
+        aria-current={isActivePath(pathname, "/account") ? "page" : undefined}
+        data-dev-outline="header-auth-account"
+        href="/account"
+        title={label}
+      >
         account
       </Link>
     </nav>

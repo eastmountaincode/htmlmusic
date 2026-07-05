@@ -29,10 +29,10 @@ export default function SketchPage() {
         </fieldset>
 
         <fieldset className="plain-fieldset">
-          <legend>Feed item</legend>
+          <legend>River item</legend>
           <p>
             Song card placeholder. This is where we can test cover, text, and
-            player layout before it touches the feed.
+            player layout before it touches the river.
           </p>
         </fieldset>
 

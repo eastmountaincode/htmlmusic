@@ -6,7 +6,7 @@ export default function Home() {
       <SiteHeader />
       <section className="page-shell">
         <fieldset className="plain-fieldset">
-          <legend>Feed</legend>
+          <legend>River</legend>
           <p>No songs yet.</p>
         </fieldset>
       </section>

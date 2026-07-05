@@ -233,7 +233,7 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
   if (!signIn || !signUp) {
     return (
       <section className="auth-shell">
-        <p>Loading account controls...</p>
+        <p>...</p>
       </section>
     );
   }

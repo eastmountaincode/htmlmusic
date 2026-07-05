@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "HTML Music",
   description: "A small web music library built with Next.js and Tailwind.",
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.png", type: "image/png" }],
   },
 };
 

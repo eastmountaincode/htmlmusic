@@ -12,7 +12,7 @@ Then open http://localhost:3000.
 
 ## Current shape
 
-- Main feed with variable-size song cards.
+- Main river with variable-size song cards.
 - Artist pages at `/artists/[slug]`.
 - Group/room pages at `/groups/[slug]`.
 - Native `audio` controls plus a small range/waveform strip.

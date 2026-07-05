@@ -10,7 +10,7 @@ export default function SsoCallbackPage() {
   const { signUp } = useSignUp();
   const router = useRouter();
   const hasRun = useRef(false);
-  const [message, setMessage] = useState("Finishing sign in...");
+  const [message, setMessage] = useState("...");
 
   useEffect(() => {
     if (!clerk.loaded || !signIn || !signUp || hasRun.current) return;

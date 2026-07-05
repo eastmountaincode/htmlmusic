@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
     ".AppleDouble/**",
   ]),
   {
-    files: ["src/components/song-card.tsx"],
+    files: ["src/components/site-header.tsx", "src/components/song-card.tsx"],
     rules: {
       "@next/next/no-img-element": "off",
     },

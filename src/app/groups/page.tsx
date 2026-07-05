@@ -7,7 +7,7 @@ export default function GroupsPage() {
       <section className="page-shell">
         <fieldset className="plain-fieldset">
           <legend>Groups</legend>
-          <p>No groups yet.</p>
+          <p>no groups yet</p>
         </fieldset>
       </section>
     </main>
