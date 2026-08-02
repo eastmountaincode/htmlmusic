@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSignIn, useSignUp } from "@clerk/nextjs";
-import { FormEvent, useState } from "react";
+import { useClerk, useSignIn, useSignUp, useUser } from "@clerk/nextjs";
+import type { SetActiveNavigate } from "@clerk/nextjs/types";
+import { FormEvent, useEffect, useState } from "react";
 
 type AuthIntent = "sign-in" | "sign-up";
 type ClerkLikeError = {
@@ -34,7 +34,8 @@ function getErrorMessage(error: unknown) {
 }
 
 export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
-  const router = useRouter();
+  const clerk = useClerk();
+  const { isLoaded: isUserLoaded, isSignedIn } = useUser();
   const {
     signIn,
     errors: signInErrors,
@@ -49,16 +50,23 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
   const [emailAddress, setEmailAddress] = useState("");
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [showMissingRequirements, setShowMissingRequirements] =
-    useState(false);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [message, setMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  useEffect(() => {
+    if (isUserLoaded && isSignedIn) {
+      window.location.replace("/account");
+    }
+  }, [isSignedIn, isUserLoaded]);
+
   const isFetching =
     signInFetchStatus === "fetching" || signUpFetchStatus === "fetching";
+  const hasMissingRequirements =
+    signUp?.status === "missing_requirements" &&
+    signUp.missingFields.length > 0;
   const pageTitle = intent === "sign-in" ? "Sign in" : "Create account";
   const alternate =
     intent === "sign-in" ? (
@@ -67,22 +75,26 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
       <Link href="/sign-in">sign in</Link>
     );
 
-  const navigateAfterAuth = ({
-    session,
-    decorateUrl,
-  }: {
-    session: { currentTask?: unknown };
-    decorateUrl: (url: string) => string;
-  }) => {
-    if (session.currentTask) return;
+  const navigateAfterAuth: SetActiveNavigate = ({ decorateUrl }) => {
+    window.location.assign(decorateUrl("/account"));
+  };
 
-    const url = decorateUrl("/");
-    if (url.startsWith("http")) {
-      window.location.href = url;
-      return;
+  const activateExistingSession = async () => {
+    const sessionId =
+      signIn?.existingSession?.sessionId ?? signUp?.existingSession?.sessionId;
+
+    if (!sessionId) return false;
+
+    try {
+      await clerk.setActive({
+        session: sessionId,
+        navigate: navigateAfterAuth,
+      });
+      return true;
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      return true;
     }
-
-    router.push(url);
   };
 
   const finalizeSignIn = async () => {
@@ -110,9 +122,12 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     });
 
     if (createError) {
+      if (await activateExistingSession()) return;
       setErrorMessage(getErrorMessage(createError));
       return;
     }
+
+    if (await activateExistingSession()) return;
 
     const { error: sendError } = await signIn.emailCode.sendCode();
     if (sendError) {
@@ -129,6 +144,7 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
 
     const { error } = await signUp.create({ transfer: true });
     if (error) {
+      if (await activateExistingSession()) return;
       setErrorMessage(getErrorMessage(error));
       return;
     }
@@ -139,9 +155,8 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     }
 
     if (signUp.status === "missing_requirements") {
-      setShowMissingRequirements(true);
       setVerifying(false);
-      setMessage("Email verified. Finish the remaining account fields.");
+      setMessage("");
       return;
     }
 
@@ -156,6 +171,7 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     const { error } = await signIn.emailCode.verifyCode({ code });
 
     if (error) {
+      if (await activateExistingSession()) return;
       if (getErrorCode(error) === "sign_up_if_missing_transfer") {
         await handleTransferToSignUp();
         return;
@@ -215,11 +231,15 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
       const { error } = await signIn.sso({
         strategy: "oauth_google",
         redirectCallbackUrl: "/sso-callback",
-        redirectUrl: "/",
+        redirectUrl: "/account",
       });
 
-      if (error) setErrorMessage(getErrorMessage(error));
+      if (error) {
+        if (await activateExistingSession()) return;
+        setErrorMessage(getErrorMessage(error));
+      }
     } catch (error) {
+      if (await activateExistingSession()) return;
       setErrorMessage(getErrorMessage(error));
     }
   };
@@ -231,7 +251,6 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     setErrorMessage("");
     setMessage("");
     setVerifying(false);
-    setShowMissingRequirements(false);
   };
 
   if (!signIn || !signUp) {
@@ -247,9 +266,9 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
       <fieldset className="auth-fieldset">
         <legend>{pageTitle}</legend>
 
-        {showMissingRequirements ? (
+        {hasMissingRequirements ? (
           <form className="auth-form" onSubmit={completeMissingRequirements}>
-            <p>Email verified. Complete the remaining fields.</p>
+            <p>Complete the remaining account fields.</p>
 
             {signUp.missingFields.includes("first_name") ? (
               <label>

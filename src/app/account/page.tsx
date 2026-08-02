@@ -9,10 +9,13 @@ export default async function AccountPage({
 }: {
   searchParams: Promise<{ tab?: string | string[] }>;
 }) {
-  const [{ userId }, query] = await Promise.all([auth(), searchParams]);
+  const [{ userId }, query] = await Promise.all([
+    auth.protect({ unauthenticatedUrl: "/sign-in" }),
+    searchParams,
+  ]);
   const activeTab = query.tab === "tracks" ? "tracks" : "settings";
   const tracks =
-    activeTab === "tracks" && userId ? await getOwnedRiverSongs(userId) : [];
+    activeTab === "tracks" ? await getOwnedRiverSongs(userId) : [];
 
   return (
     <main>

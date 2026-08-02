@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClerk, useSignIn, useSignUp } from "@clerk/nextjs";
+import type { SetActiveNavigate } from "@clerk/nextjs/types";
 
 export default function SsoCallbackPage() {
   const clerk = useClerk();
@@ -17,93 +18,109 @@ export default function SsoCallbackPage() {
 
     hasRun.current = true;
 
-    const navigateHome = ({
-      session,
-      decorateUrl,
-    }: {
-      session: { currentTask?: unknown };
-      decorateUrl: (url: string) => string;
-    }) => {
-      if (session.currentTask) {
-        setMessage("Your account needs one more step.");
-        return;
-      }
-
-      const url = decorateUrl("/");
-      if (url.startsWith("http")) {
-        window.location.href = url;
-        return;
-      }
-
-      router.push(url);
+    const navigateToAccount: SetActiveNavigate = ({ decorateUrl }) => {
+      window.location.assign(decorateUrl("/account"));
     };
 
     const run = async () => {
-      if ((signIn.status as string) === "complete") {
-        await signIn.finalize({ navigate: navigateHome });
-        return;
-      }
-
-      if (signUp.isTransferable) {
-        const { error } = await signIn.create({ transfer: true });
-        if (error) {
-          setMessage(error.longMessage ?? error.message);
+      try {
+        if (signIn.status === "complete") {
+          const { error } = await signIn.finalize({
+            navigate: navigateToAccount,
+          });
+          if (error) setMessage(error.longMessage ?? error.message);
           return;
         }
 
-        if ((signIn.status as string) === "complete") {
-          await signIn.finalize({ navigate: navigateHome });
-          return;
-        }
-      }
+        if (signUp.isTransferable) {
+          const { error } = await signIn.create({ transfer: true });
+          if (error) {
+            setMessage(error.longMessage ?? error.message);
+            return;
+          }
 
-      if (
-        signIn.status === "needs_first_factor" &&
-        !signIn.supportedFirstFactors?.every(
-          (factor) => factor.strategy === "enterprise_sso",
-        )
-      ) {
-        router.push("/sign-in");
-        return;
-      }
+          // create() mutates this signal resource, which TypeScript cannot see.
+          if ((signIn.status as string) === "complete") {
+            const { error: finalizeError } = await signIn.finalize({
+              navigate: navigateToAccount,
+            });
+            if (finalizeError) {
+              setMessage(finalizeError.longMessage ?? finalizeError.message);
+            }
+            return;
+          }
 
-      if (signIn.isTransferable) {
-        const { error } = await signUp.create({ transfer: true });
-        if (error) {
-          setMessage(error.longMessage ?? error.message);
-          return;
-        }
-
-        if ((signUp.status as string) === "complete") {
-          await signUp.finalize({ navigate: navigateHome });
+          router.replace("/sign-in");
           return;
         }
 
-        router.push("/sign-up");
-        return;
-      }
-
-      if ((signUp.status as string) === "complete") {
-        await signUp.finalize({ navigate: navigateHome });
-        return;
-      }
-
-      if (signIn.status === "needs_second_factor") {
-        router.push("/sign-in");
-        return;
-      }
-
-      if (signIn.existingSession || signUp.existingSession) {
-        const sessionId =
-          signIn.existingSession?.sessionId || signUp.existingSession?.sessionId;
-
-        if (sessionId) {
-          await clerk.setActive({ session: sessionId, navigate: navigateHome });
+        if (
+          signIn.status === "needs_first_factor" &&
+          !signIn.supportedFirstFactors?.every(
+            (factor) => factor.strategy === "enterprise_sso",
+          )
+        ) {
+          router.replace("/sign-in");
           return;
         }
-      }
 
-      setMessage("The sign-in is waiting for more information.");
+        if (signIn.isTransferable) {
+          const { error } = await signUp.create({ transfer: true });
+          if (error) {
+            setMessage(error.longMessage ?? error.message);
+            return;
+          }
+
+          if (signUp.status === "complete") {
+            const { error: finalizeError } = await signUp.finalize({
+              navigate: navigateToAccount,
+            });
+            if (finalizeError) {
+              setMessage(finalizeError.longMessage ?? finalizeError.message);
+            }
+            return;
+          }
+
+          router.replace("/sign-up");
+          return;
+        }
+
+        if (signUp.status === "complete") {
+          const { error } = await signUp.finalize({
+            navigate: navigateToAccount,
+          });
+          if (error) setMessage(error.longMessage ?? error.message);
+          return;
+        }
+
+        if (
+          signIn.status === "needs_second_factor" ||
+          signIn.status === "needs_new_password"
+        ) {
+          router.replace("/sign-in");
+          return;
+        }
+
+        if (signIn.existingSession || signUp.existingSession) {
+          const sessionId =
+            signIn.existingSession?.sessionId ??
+            signUp.existingSession?.sessionId;
+
+          if (sessionId) {
+            await clerk.setActive({
+              session: sessionId,
+              navigate: navigateToAccount,
+            });
+            return;
+          }
+        }
+
+        setMessage("The sign-in is waiting for more information.");
+      } catch (error) {
+        setMessage(
+          error instanceof Error ? error.message : "Google sign in failed.",
+        );
+      }
     };
 
     void run();
