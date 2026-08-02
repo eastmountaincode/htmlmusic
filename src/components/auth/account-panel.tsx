@@ -12,6 +12,12 @@ import {
 
 type AccountTab = "settings" | "tracks";
 
+type ClerkWindow = Window & {
+  __internal_onBeforeSetActive?: (
+    intent?: string | null,
+  ) => Promise<void> | void;
+};
+
 function AccountTabs({ activeTab }: { activeTab: AccountTab }) {
   return (
     <nav aria-label="account sections" className="account-tabs">
@@ -41,6 +47,7 @@ export function AccountPanel({
   const { signOut } = useClerk();
   const { isLoaded, user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   async function saveName(event: FormEvent<HTMLFormElement>) {
@@ -77,6 +84,41 @@ export function AccountPanel({
       );
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleSignOut() {
+    if (isSigningOut) return;
+
+    setIsSigningOut(true);
+    setErrorMessage("");
+
+    const clerkWindow = window as ClerkWindow;
+    const originalBeforeSetActive =
+      clerkWindow.__internal_onBeforeSetActive;
+
+    // ClerkJS currently omits the "sign-out" intent here, so Clerk's Next 16
+    // adapter attempts a protected Server Action after clearing the session.
+    // Skip only this click's first hook call; all other auth transitions still
+    // use Clerk's cache invalidation behavior.
+    const beforeSignOut = (intent?: string | null) => {
+      clerkWindow.__internal_onBeforeSetActive = originalBeforeSetActive;
+
+      if (intent == null) return Promise.resolve();
+      return Promise.resolve(originalBeforeSetActive?.(intent));
+    };
+
+    clerkWindow.__internal_onBeforeSetActive = beforeSignOut;
+
+    try {
+      await signOut({ redirectUrl: "/" });
+    } catch {
+      setErrorMessage("You could not be signed out. Try again.");
+    } finally {
+      if (clerkWindow.__internal_onBeforeSetActive === beforeSignOut) {
+        clerkWindow.__internal_onBeforeSetActive = originalBeforeSetActive;
+      }
+      setIsSigningOut(false);
     }
   }
 
@@ -154,10 +196,12 @@ export function AccountPanel({
           </table>
           <p>
             <button
+              aria-busy={isSigningOut}
+              disabled={isSigningOut}
               type="button"
-              onClick={() => void signOut({ redirectUrl: "/" })}
+              onClick={() => void handleSignOut()}
             >
-              sign out
+              {isSigningOut ? "signing out..." : "sign out"}
             </button>
           </p>
         </fieldset>
