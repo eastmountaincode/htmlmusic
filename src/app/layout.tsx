@@ -1,6 +1,12 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { DevOutlineToggle } from "@/components/dev-outline-toggle";
+import {
+  AudioPlayerProvider,
+  PersistentAudioPlayer,
+} from "@/components/persistent-audio-player";
+import { DiscoverReturnProvider } from "@/components/discover-return-state";
+import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,8 +29,16 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ClerkProvider>
-          {children}
-          {devOutlinesEnabled ? <DevOutlineToggle /> : null}
+          <AudioPlayerProvider>
+            <DiscoverReturnProvider>
+              <div className="site-chrome">
+                <SiteHeader />
+              </div>
+              {children}
+              <PersistentAudioPlayer />
+              {devOutlinesEnabled ? <DevOutlineToggle /> : null}
+            </DiscoverReturnProvider>
+          </AudioPlayerProvider>
         </ClerkProvider>
       </body>
     </html>

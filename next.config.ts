@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  async redirects() {
+    return [
+      {
+        source: "/ftp-demo",
+        destination: "/",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
+
+initOpenNextCloudflareForDev();

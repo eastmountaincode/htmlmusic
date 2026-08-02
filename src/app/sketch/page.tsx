@@ -1,9 +1,6 @@
-import { SiteHeader } from "@/components/site-header";
-
 export default function SketchPage() {
   return (
     <main>
-      <SiteHeader />
       <section className="page-shell sketch-shell">
         <fieldset className="plain-fieldset">
           <legend>Sketch</legend>
@@ -29,10 +26,10 @@ export default function SketchPage() {
         </fieldset>
 
         <fieldset className="plain-fieldset">
-          <legend>River item</legend>
+          <legend>Discover item</legend>
           <p>
             Song card placeholder. This is where we can test cover, text, and
-            player layout before it touches the river.
+            player layout before it touches Discover.
           </p>
         </fieldset>
 

@@ -7,7 +7,11 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (isProtectedRoute(request)) {
+  const isPublicApi =
+    request.nextUrl.pathname === "/api/comments" ||
+    request.nextUrl.pathname === "/api/recordings";
+
+  if (isProtectedRoute(request) && !isPublicApi) {
     await auth.protect();
   }
 });

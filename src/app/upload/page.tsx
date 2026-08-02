@@ -1,9 +1,6 @@
-import { SiteHeader } from "@/components/site-header";
-
 export default function UploadPage() {
   return (
     <main>
-      <SiteHeader />
       <section className="page-shell">
         <fieldset className="plain-fieldset">
           <legend>Upload</legend>

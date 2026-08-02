@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const navLinks = [
-  { href: "/", label: "river" },
-  { href: "/groups", label: "groups" },
-  { href: "/upload", label: "upload" },
+  { href: "/", label: "discover", outlineKey: "discover" },
+  { href: "/upload", label: "upload", outlineKey: "upload" },
+  { href: "/about", label: "about", outlineKey: "about" },
 ];
 
 function isActivePath(pathname: string, href: string) {
@@ -29,7 +29,7 @@ export function HeaderNav() {
         return (
           <Link
             aria-current={isActive ? "page" : undefined}
-            data-dev-outline={`header-nav-${link.label}`}
+            data-dev-outline={`header-nav-${link.outlineKey}`}
             href={link.href}
             key={link.href}
           >
@@ -37,6 +37,14 @@ export function HeaderNav() {
           </Link>
         );
       })}
+      <a
+        data-dev-outline="header-nav-support"
+        href="https://ko-fi.com/goodbyeoblivion"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        support
+      </a>
     </nav>
   );
 }

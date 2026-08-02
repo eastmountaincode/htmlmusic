@@ -19,10 +19,13 @@
 
 html {
   color-scheme: light;
+  overscroll-behavior-y: none;
 }
 
 body {
   margin: 0;
+  min-height: 100dvh;
+  overscroll-behavior-y: none;
   background: var(--background);
   color: var(--foreground);
   font-family: "Times New Roman", Times, serif;
@@ -179,16 +182,20 @@ html.dev-outlines-on body [data-dev-outline="header-nav"] {
   --dev-outline-color: #6c5ce7;
 }
 
-html.dev-outlines-on body [data-dev-outline="header-nav-river"] {
+html.dev-outlines-on body [data-dev-outline="header-nav-discover"] {
   --dev-outline-color: #00cec9;
-}
-
-html.dev-outlines-on body [data-dev-outline="header-nav-groups"] {
-  --dev-outline-color: #fdcb6e;
 }
 
 html.dev-outlines-on body [data-dev-outline="header-nav-upload"] {
   --dev-outline-color: #e84393;
+}
+
+html.dev-outlines-on body [data-dev-outline="header-nav-about"] {
+  --dev-outline-color: #0984e3;
+}
+
+html.dev-outlines-on body [data-dev-outline="header-nav-support"] {
+  --dev-outline-color: #fdcb6e;
 }
 
 html.dev-outlines-on body [data-dev-outline="header-auth"],
@@ -206,6 +213,13 @@ html.dev-outlines-on body [data-dev-outline="header-auth-sign-up"] {
 
 html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   --dev-outline-color: #fab1a0;
+}
+
+.site-chrome {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
 }
 
 .site-header {
@@ -274,6 +288,144 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   font-weight: bold;
 }
 
+.persistent-audio-player {
+  position: fixed;
+  bottom: max(0.75rem, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 200;
+  width: min(46rem, calc(100% - 2rem));
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translateX(-50%);
+  font-family: Times, "Times New Roman", serif;
+  font-size: 16px;
+}
+
+.persistent-audio-player__spacer {
+  height: 6rem;
+}
+
+.persistent-audio-player__inner {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+.persistent-audio-player__fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0.35rem 0.55rem 0.5rem;
+  border: 1px solid #000000;
+  background: #ffffff;
+}
+
+.persistent-audio-player__row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.6fr) minmax(18rem, 1.4fr) auto;
+  gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.persistent-audio-player__track {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.persistent-audio-player__metadata {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.persistent-audio-player__metadata strong,
+.persistent-audio-player__metadata span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.persistent-audio-player__metadata span {
+  color: #444444;
+  font-size: 14px;
+}
+
+.persistent-audio-player__artwork,
+.river-file__thumbnail,
+.river-file__artwork {
+  display: block;
+  object-fit: cover;
+}
+
+.persistent-audio-player__controls {
+  min-width: 0;
+}
+
+.persistent-audio-player__close {
+  width: 1.75rem;
+  height: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.persistent-audio-player__error {
+  margin: 0.35rem 0 0;
+  padding-left: 30px;
+  color: #990000;
+  font-size: 14px;
+}
+
+.persistent-audio-player__media {
+  display: none;
+}
+
+.html-audio-controls {
+  display: grid;
+  grid-template-columns: auto minmax(6rem, 1fr) max-content;
+  gap: 0.5rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.html-audio-controls button,
+.recording-share {
+  width: 3.25rem;
+  min-width: 3.25rem;
+  height: 1.75rem;
+  min-height: 1.75rem;
+  padding-inline: 0.25rem;
+  font-family: Times, "Times New Roman", serif;
+  font-size: 16px;
+  line-height: normal;
+  white-space: nowrap;
+}
+
+.html-audio-controls input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  min-height: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.html-audio-controls output {
+  min-width: 6.4rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .page-shell,
 .auth-shell {
   @apply mx-auto max-w-[900px] px-4 py-5;
@@ -286,6 +438,53 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   border: 1px solid #000000;
   background: #ffffff;
   padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.about-bug-report {
+  margin: 0.5rem 0 0;
+}
+
+.about-bug-report a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.about-bug-report a:visited {
+  color: #551a8b;
+}
+
+.account-form {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.account-form__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.account-form__controls input,
+.account-form__controls button {
+  height: 1.75rem;
+  margin: 0;
+}
+
+.account-form__controls input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.account-form__controls button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.account-form__error {
+  color: #b00000;
 }
 
 .auth-form {
@@ -341,6 +540,260 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   width: 8rem;
 }
 
+.account-table th {
+  width: 4rem;
+}
+
+.account-table th,
+.account-table td {
+  vertical-align: middle;
+}
+
+.account-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.recording-page a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.recording-page a:visited {
+  color: #551a8b;
+}
+
+.recording-page__back {
+  margin-bottom: 0.5rem;
+}
+
+.recording-page__fieldset {
+  max-width: 44rem;
+}
+
+.recording-page__fieldset legend {
+  max-width: calc(100% - 1rem);
+  overflow-wrap: anywhere;
+}
+
+.recording-page__layout {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.recording-page__layout--with-artwork {
+  grid-template-columns: 128px minmax(0, 1fr);
+}
+
+.recording-page__artwork {
+  display: block;
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+}
+
+.recording-page__content {
+  min-width: 0;
+}
+
+.recording-page__table {
+  margin: 0 0 0.75rem;
+}
+
+.recording-page__table th {
+  width: 6rem;
+}
+
+.recording-page__table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.recording-page .html-audio-controls {
+  max-width: 36rem;
+}
+
+.directory-index {
+  width: min(100%, 900px);
+  margin: 0 auto;
+  padding: 8px 16px 16px;
+  color: #000000;
+  font-family: Times;
+  font-size: 16px;
+  line-height: normal;
+}
+
+.directory-index a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.directory-index a:visited {
+  color: #551a8b;
+}
+
+.river-file__summary {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  column-gap: 0.5rem;
+  align-items: center;
+}
+
+.river-file__cells {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.45fr) 8rem 3.5rem;
+  column-gap: 0.75rem;
+  align-items: center;
+  min-width: 0;
+}
+
+.river-file__credits {
+  display: contents;
+}
+
+.river-directory__list {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.river-directory__more {
+  margin: 0.75rem 0 0;
+  padding-left: 30px;
+}
+
+.river-directory__error {
+  margin: 0.5rem 0 0;
+  padding-left: 30px;
+  color: #990000;
+}
+
+.river-file {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 1.5rem;
+  column-gap: 0.75rem;
+  position: relative;
+  scroll-margin-top: 6rem;
+}
+
+.river-file > details {
+  min-width: 0;
+}
+
+.river-file__summary {
+  min-height: 24px;
+  padding: 0.25rem 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.river-file__summary::-webkit-details-marker {
+  display: none;
+}
+
+.river-file__name,
+.river-file__artist {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.river-file__name {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.river-file[aria-current="true"] .river-file__name,
+.river-file:target .river-file__name {
+  font-weight: bold;
+}
+
+.river-file__posted,
+.river-file__length {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.river-file__permalink {
+  align-self: start;
+  justify-self: end;
+  margin-top: 0.25rem;
+  line-height: 24px;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+
+.river-file__permalink:hover,
+.river-file__permalink:focus-visible {
+  text-decoration: underline !important;
+}
+
+.river-file__player {
+  max-width: 36rem;
+  padding: 0.25rem 0 0.75rem 30px;
+}
+
+.river-file__player--with-artwork {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 0.75rem;
+  max-width: 44rem;
+}
+
+.river-file__artwork {
+  width: 96px;
+  height: 96px;
+}
+
+.river-comments {
+  grid-column: 1 / -1;
+  max-width: 36rem;
+  margin-top: 0.5rem;
+}
+
+.river-comments__body {
+  padding: 0.35rem 0 0 1rem;
+}
+
+.river-comments__body p {
+  margin-bottom: 0.5rem;
+}
+
+.river-comments__list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.river-comments__list li {
+  margin-bottom: 0.65rem;
+}
+
+.river-comments__text {
+  margin-bottom: 0.1rem !important;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.river-comments__form {
+  display: grid;
+  gap: 0.25rem;
+  max-width: 30rem;
+  margin-top: 0.75rem;
+}
+
+.river-comments__form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.river-comments__form button {
+  width: fit-content;
+}
+
+.river-comments__error {
+  color: #990000;
+}
+
 .sketch-shell {
   display: grid;
   gap: 1rem;
@@ -360,4 +813,120 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   .site-header__nav {
     justify-content: flex-start;
   }
+
+  .persistent-audio-player {
+    width: calc(100% - 1rem);
+  }
+
+  .persistent-audio-player__spacer {
+    height: 8.5rem;
+  }
+
+  .persistent-audio-player__row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.4rem 0.65rem;
+  }
+
+  .persistent-audio-player__track {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .persistent-audio-player__close {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .persistent-audio-player__controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .persistent-audio-player__controls output {
+    min-width: 5.65rem;
+    font-size: 13px;
+  }
+
+  .directory-index {
+    padding-top: 8px;
+  }
+
+  .river-file__summary {
+    padding: 0.3rem 1.5rem 0.3rem 0;
+  }
+
+  .river-file__permalink {
+    position: absolute;
+    top: 0.3rem;
+    right: 0;
+    margin-top: 0;
+  }
+
+  .river-file {
+    display: block;
+    scroll-margin-top: 9rem;
+  }
+
+  .river-file__cells {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.05rem;
+  }
+
+  .river-file__name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .river-file__length {
+    display: none;
+  }
+
+  .river-file__credits {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: start;
+    color: #000000;
+    font-size: 14px;
+  }
+
+  .river-file__posted {
+    text-align: left;
+  }
+
+  .river-file__player {
+    max-width: none;
+  }
+
+  .river-file__player--with-artwork {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .river-file__artwork {
+    width: 72px;
+    height: 72px;
+  }
+
+  .recording-page__layout--with-artwork {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .recording-page__artwork {
+    width: 96px;
+    height: 96px;
+  }
+
+  .recording-page .html-audio-controls {
+    grid-template-columns: auto minmax(4rem, 1fr) max-content;
+    gap: 0.35rem;
+  }
+
+  .recording-page .html-audio-controls output {
+    min-width: 5.65rem;
+    font-size: 13px;
+  }
+
 }

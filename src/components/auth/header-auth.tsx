@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
+import { getArtistName } from "@/lib/artist-name";
 
 function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -45,11 +46,7 @@ export function HeaderAuth() {
     );
   }
 
-  const label =
-    user.username ??
-    user.primaryEmailAddress?.emailAddress ??
-    user.fullName ??
-    "signed in";
+  const label = getArtistName(user);
 
   return (
     <nav
