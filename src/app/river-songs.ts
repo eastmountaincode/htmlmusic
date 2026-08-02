@@ -1,8 +1,9 @@
 import "server-only";
 
-import type { RiverSong } from "@/components/river-directory";
+import type { RiverSong } from "@/components/river-recording-row";
 import {
   getPublishedRecording,
+  listOwnedPublishedRecordings,
   listPublishedRecordings,
   publishedRecordingExists,
   type StoredRecording,
@@ -44,7 +45,9 @@ function formatPosted(createdAt: string) {
   return `${months} month${months === 1 ? "" : "s"} ago`;
 }
 
-function storedRecordingToRiverSong(recording: StoredRecording): RiverSong {
+export function storedRecordingToRiverSong(
+  recording: StoredRecording,
+): RiverSong {
   return {
     id: recording.id,
     filename: recording.filename,
@@ -67,6 +70,12 @@ export async function getRiverSong(id: string) {
 
 export async function isKnownRiverTrack(id: string) {
   return publishedRecordingExists(id);
+}
+
+export async function getOwnedRiverSongs(ownerId: string) {
+  return (await listOwnedPublishedRecordings(ownerId)).map(
+    storedRecordingToRiverSong,
+  );
 }
 
 async function getAllRiverSongs() {

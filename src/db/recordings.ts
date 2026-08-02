@@ -100,6 +100,19 @@ export async function getOwnedPendingRecording(id: string, ownerId: string) {
   return rows[0] ? fromRecordingRow(rows[0]) : null;
 }
 
+export async function getOwnedRecording(id: string, ownerId: string) {
+  const rows = await queryD1<RecordingRow>(
+    `SELECT ${recordingColumns}
+     FROM recordings AS recording
+     INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     WHERE recording.id = ? AND recording.owner_id = ?
+     LIMIT 1`,
+    [id, ownerId],
+  );
+
+  return rows[0] ? fromRecordingRow(rows[0]) : null;
+}
+
 export async function completeOwnedRecording(id: string, ownerId: string) {
   await runD1(
     `UPDATE recordings
@@ -135,6 +148,41 @@ export async function listPublishedRecordings(limit = 500) {
   );
 
   return rows.map(fromRecordingRow);
+}
+
+export async function listOwnedPublishedRecordings(
+  ownerId: string,
+  limit = 500,
+) {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), 500));
+  const rows = await queryD1<RecordingRow>(
+    `SELECT ${recordingColumns}
+     FROM recordings AS recording
+     INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     WHERE recording.owner_id = ? AND recording.status = 'ready'
+     ORDER BY recording.created_at DESC, recording.id DESC
+     LIMIT ?`,
+    [ownerId, safeLimit],
+  );
+
+  return rows.map(fromRecordingRow);
+}
+
+export async function deleteOwnedRecording(id: string, ownerId: string) {
+  await runD1(
+    `DELETE FROM comments
+     WHERE track_id = ?
+       AND EXISTS (
+         SELECT 1 FROM recordings
+         WHERE recordings.id = ? AND recordings.owner_id = ?
+       )`,
+    [id, id, ownerId],
+  );
+  await runD1(
+    `DELETE FROM recordings
+     WHERE id = ? AND owner_id = ?`,
+    [id, ownerId],
+  );
 }
 
 export async function publishedRecordingExists(id: string) {

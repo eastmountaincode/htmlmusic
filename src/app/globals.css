@@ -487,6 +487,37 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   color: #b00000;
 }
 
+.account-tracks {
+  max-width: none;
+  margin-top: 1rem;
+  font-size: 16px;
+  line-height: normal;
+}
+
+.account-track {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.account-track__actions {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+
+.account-track__actions .river-file__permalink {
+  margin-top: 0;
+}
+
+.account-tracks__empty {
+  margin: 0.25rem 0 0;
+}
+
+.account-tracks__error {
+  margin: 0.5rem 0 0;
+  color: #990000;
+}
+
 .auth-form {
   display: grid;
   gap: 0.75rem;
@@ -957,6 +988,21 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   .river-file {
     display: block;
     scroll-margin-top: 9rem;
+  }
+
+  .account-track {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.5rem;
+  }
+
+  .account-track .river-file__summary {
+    padding-right: 0;
+  }
+
+  .account-track .river-file__permalink {
+    position: static;
+    margin-top: 0;
   }
 
   .river-file__cells {

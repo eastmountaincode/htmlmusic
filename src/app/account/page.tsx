@@ -1,9 +1,16 @@
+import { auth } from "@clerk/nextjs/server";
+import { getOwnedRiverSongs } from "@/app/river-songs";
 import { AccountPanel } from "@/components/auth/account-panel";
 
-export default function AccountPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AccountPage() {
+  const { userId } = await auth();
+  const tracks = userId ? await getOwnedRiverSongs(userId) : [];
+
   return (
     <main>
-      <AccountPanel />
+      <AccountPanel initialTracks={tracks} />
     </main>
   );
 }

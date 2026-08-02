@@ -12,50 +12,13 @@ import { useDiscoverReturnState } from "@/components/discover-return-state";
 import {
   HtmlAudioControls,
   useAudioPlayer,
-  type AudioTrack,
 } from "@/components/persistent-audio-player";
+import {
+  RiverRecordingCells,
+  RiverRecordingIcon,
+  type RiverSong,
+} from "@/components/river-recording-row";
 import { RiverComments } from "@/components/river-comments";
-
-export type RiverSong = AudioTrack & {
-  length: string;
-  posted: string;
-  postedAt: string;
-};
-
-function RecordingIcon({ song }: { song: RiverSong }) {
-  return (
-    <Image
-      alt="[SND]"
-      className={song.artwork ? "river-file__thumbnail" : undefined}
-      height={22}
-      loading="eager"
-      src={song.artwork ?? "/apache-icons/sound2.gif"}
-      unoptimized
-      width={song.artwork ? 22 : 20}
-    />
-  );
-}
-
-function RiverCells({
-  artist,
-  filename,
-  length,
-  posted,
-  postedAt,
-}: RiverSong) {
-  return (
-    <span className="river-file__cells">
-      <span className="river-file__name">{filename}</span>
-      <span className="river-file__credits">
-        <span className="river-file__artist">{artist}</span>
-        <time className="river-file__posted" dateTime={postedAt}>
-          {posted}
-        </time>
-      </span>
-      <span className="river-file__length">{length}</span>
-    </span>
-  );
-}
 
 function RiverFile({
   isCurrent,
@@ -91,8 +54,8 @@ function RiverFile({
     >
       <details name="river-player" ref={trackDetailsRef}>
         <summary className="river-file__summary">
-          <RecordingIcon song={song} />
-          <RiverCells {...song} />
+          <RiverRecordingIcon song={song} />
+          <RiverRecordingCells {...song} />
         </summary>
         <div
           className={`river-file__player${

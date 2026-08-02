@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -103,4 +104,19 @@ export async function headR2Object(key: string) {
     contentLength: response.ContentLength ?? null,
     contentType: response.ContentType ?? null,
   };
+}
+
+export async function deleteR2Objects(keys: string[]) {
+  const { bucket } = getR2Config();
+
+  await Promise.all(
+    keys.map((key) =>
+      getR2Client().send(
+        new DeleteObjectCommand({
+          Bucket: bucket,
+          Key: key,
+        }),
+      ),
+    ),
+  );
 }

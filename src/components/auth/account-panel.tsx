@@ -2,12 +2,14 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useState, type FormEvent } from "react";
+import { AccountTracks } from "@/components/account-tracks";
+import type { RiverSong } from "@/components/river-recording-row";
 import {
   ARTIST_NAME_MAX_LENGTH,
   getArtistName,
 } from "@/lib/artist-name";
 
-export function AccountPanel() {
+export function AccountPanel({ initialTracks }: { initialTracks: RiverSong[] }) {
   const { signOut } = useClerk();
   const { isLoaded, user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
@@ -116,6 +118,7 @@ export function AccountPanel() {
           </button>
         </p>
       </fieldset>
+      <AccountTracks initialTracks={initialTracks} />
     </section>
   );
 }

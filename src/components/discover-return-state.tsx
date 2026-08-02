@@ -13,7 +13,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import type { RiverSong } from "@/components/river-directory";
+import type { RiverSong } from "@/components/river-recording-row";
 
 export type DiscoverReturnState = {
   anchorTrackId: string | null;
