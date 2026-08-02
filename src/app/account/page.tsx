@@ -10,7 +10,7 @@ export default async function AccountPage({
   searchParams: Promise<{ tab?: string | string[] }>;
 }) {
   const [{ userId }, query] = await Promise.all([
-    auth.protect(undefined, { unauthenticatedUrl: "/sign-in" }),
+    auth.protect(),
     searchParams,
   ]);
   const activeTab = query.tab === "tracks" ? "tracks" : "settings";

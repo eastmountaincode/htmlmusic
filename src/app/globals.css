@@ -284,7 +284,8 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 }
 
 .site-header__nav a[aria-current="page"],
-.header-auth a[aria-current="page"] {
+.header-auth a[aria-current="page"],
+.account-tabs a[aria-current="page"] {
   font-weight: bold;
 }
 
@@ -491,21 +492,6 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   display: flex;
   gap: 0.75rem;
   margin-bottom: 0.5rem;
-}
-
-.account-tabs a {
-  color: #0000ee;
-  text-decoration: underline;
-}
-
-.account-tabs a:visited {
-  color: #551a8b;
-}
-
-.account-tabs a[aria-current="page"] {
-  color: inherit;
-  font-weight: bold;
-  text-decoration: none;
 }
 
 .account-tracks {

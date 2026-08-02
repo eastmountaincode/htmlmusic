@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useClerk, useSignIn, useSignUp } from "@clerk/nextjs";
 import type { SetActiveNavigate } from "@clerk/nextjs/types";
+import {
+  getAccountReturnPath,
+  getAuthPath,
+} from "@/lib/account-return-path";
 
 export default function SsoCallbackPage() {
   const clerk = useClerk();
@@ -18,8 +22,12 @@ export default function SsoCallbackPage() {
 
     hasRun.current = true;
 
+    const returnTo = getAccountReturnPath(
+      new URLSearchParams(window.location.search).get("redirect_url"),
+    );
+
     const navigateToAccount: SetActiveNavigate = ({ decorateUrl }) => {
-      window.location.assign(decorateUrl("/account"));
+      window.location.assign(decorateUrl(returnTo));
     };
 
     const run = async () => {
@@ -50,7 +58,7 @@ export default function SsoCallbackPage() {
             return;
           }
 
-          router.replace("/sign-in");
+          router.replace(getAuthPath("/sign-in", returnTo));
           return;
         }
 
@@ -60,7 +68,7 @@ export default function SsoCallbackPage() {
             (factor) => factor.strategy === "enterprise_sso",
           )
         ) {
-          router.replace("/sign-in");
+          router.replace(getAuthPath("/sign-in", returnTo));
           return;
         }
 
@@ -81,7 +89,7 @@ export default function SsoCallbackPage() {
             return;
           }
 
-          router.replace("/sign-up");
+          router.replace(getAuthPath("/sign-up", returnTo));
           return;
         }
 
@@ -97,7 +105,7 @@ export default function SsoCallbackPage() {
           signIn.status === "needs_second_factor" ||
           signIn.status === "needs_new_password"
         ) {
-          router.replace("/sign-in");
+          router.replace(getAuthPath("/sign-in", returnTo));
           return;
         }
 

@@ -24,12 +24,14 @@ function AccountTabs({ activeTab }: { activeTab: AccountTab }) {
       <Link
         aria-current={activeTab === "settings" ? "page" : undefined}
         href="/account"
+        prefetch={false}
       >
         settings
       </Link>
       <Link
         aria-current={activeTab === "tracks" ? "page" : undefined}
         href="/account?tab=tracks"
+        prefetch={false}
       >
         tracks
       </Link>

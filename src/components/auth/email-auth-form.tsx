@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useClerk, useSignIn, useSignUp, useUser } from "@clerk/nextjs";
 import type { SetActiveNavigate } from "@clerk/nextjs/types";
 import { FormEvent, useEffect, useState } from "react";
+import { getAuthPath } from "@/lib/account-return-path";
 
 type AuthIntent = "sign-in" | "sign-up";
 type ClerkLikeError = {
@@ -33,7 +34,13 @@ function getErrorMessage(error: unknown) {
   );
 }
 
-export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
+export function EmailAuthForm({
+  intent,
+  returnTo,
+}: {
+  intent: AuthIntent;
+  returnTo: string;
+}) {
   const clerk = useClerk();
   const { isLoaded: isUserLoaded, isSignedIn } = useUser();
   const {
@@ -58,9 +65,9 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
 
   useEffect(() => {
     if (isUserLoaded && isSignedIn) {
-      window.location.replace("/account");
+      window.location.replace(returnTo);
     }
-  }, [isSignedIn, isUserLoaded]);
+  }, [isSignedIn, isUserLoaded, returnTo]);
 
   const isFetching =
     signInFetchStatus === "fetching" || signUpFetchStatus === "fetching";
@@ -70,13 +77,13 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
   const pageTitle = intent === "sign-in" ? "Sign in" : "Create account";
   const alternate =
     intent === "sign-in" ? (
-      <Link href="/sign-up">create account</Link>
+      <Link href={getAuthPath("/sign-up", returnTo)}>create account</Link>
     ) : (
-      <Link href="/sign-in">sign in</Link>
+      <Link href={getAuthPath("/sign-in", returnTo)}>sign in</Link>
     );
 
   const navigateAfterAuth: SetActiveNavigate = ({ decorateUrl }) => {
-    window.location.assign(decorateUrl("/account"));
+    window.location.assign(decorateUrl(returnTo));
   };
 
   const activateExistingSession = async () => {
@@ -230,8 +237,8 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     try {
       const { error } = await signIn.sso({
         strategy: "oauth_google",
-        redirectCallbackUrl: "/sso-callback",
-        redirectUrl: "/account",
+        redirectCallbackUrl: getAuthPath("/sso-callback", returnTo),
+        redirectUrl: returnTo,
       });
 
       if (error) {
