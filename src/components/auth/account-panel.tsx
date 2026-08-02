@@ -1,6 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { AccountTracks } from "@/components/account-tracks";
 import type { RiverSong } from "@/components/river-recording-row";
@@ -9,7 +10,34 @@ import {
   getArtistName,
 } from "@/lib/artist-name";
 
-export function AccountPanel({ initialTracks }: { initialTracks: RiverSong[] }) {
+type AccountTab = "settings" | "tracks";
+
+function AccountTabs({ activeTab }: { activeTab: AccountTab }) {
+  return (
+    <nav aria-label="account sections" className="account-tabs">
+      <Link
+        aria-current={activeTab === "settings" ? "page" : undefined}
+        href="/account"
+      >
+        settings
+      </Link>
+      <Link
+        aria-current={activeTab === "tracks" ? "page" : undefined}
+        href="/account?tab=tracks"
+      >
+        tracks
+      </Link>
+    </nav>
+  );
+}
+
+export function AccountPanel({
+  activeTab,
+  initialTracks,
+}: {
+  activeTab: AccountTab;
+  initialTracks: RiverSong[];
+}) {
   const { signOut } = useClerk();
   const { isLoaded, user } = useUser();
   const [isSaving, setIsSaving] = useState(false);
@@ -54,9 +82,14 @@ export function AccountPanel({ initialTracks }: { initialTracks: RiverSong[] }) 
 
   if (!isLoaded) {
     return (
-      <section className="page-shell">
-        <fieldset className="plain-fieldset">
-          <legend>Account</legend>
+      <section className="page-shell account-page">
+        <AccountTabs activeTab={activeTab} />
+        <fieldset
+          className={`plain-fieldset${
+            activeTab === "tracks" ? " account-tracks" : ""
+          }`}
+        >
+          <legend>{activeTab}</legend>
           <p>...</p>
         </fieldset>
       </section>
@@ -64,61 +97,71 @@ export function AccountPanel({ initialTracks }: { initialTracks: RiverSong[] }) 
   }
 
   return (
-    <section className="page-shell">
-      <fieldset className="plain-fieldset">
-        <legend>Account</legend>
-        <table className="plain-table account-table">
-          <tbody>
-            <tr>
-              <th id="account-name-label" scope="row">
-                name
-              </th>
-              <td>
-                {user ? (
-                  <form className="account-form" onSubmit={saveName}>
-                    <span className="account-form__controls">
-                      <input
-                        aria-labelledby="account-name-label"
-                        autoComplete="name"
-                        defaultValue={getArtistName(user)}
-                        id="account-name"
-                        maxLength={ARTIST_NAME_MAX_LENGTH}
-                        name="name"
-                        required
-                        type="text"
-                      />
-                      <button
-                        aria-busy={isSaving}
-                        disabled={isSaving}
-                        type="submit"
-                      >
-                        {isSaving ? "saving..." : "save"}
-                      </button>
-                    </span>
-                    {errorMessage ? (
-                      <span aria-live="polite" className="account-form__error">
-                        {errorMessage}
+    <section className="page-shell account-page">
+      <AccountTabs activeTab={activeTab} />
+      {activeTab === "tracks" ? (
+        <AccountTracks initialTracks={initialTracks} />
+      ) : (
+        <fieldset className="plain-fieldset">
+          <legend>settings</legend>
+          <table className="plain-table account-table">
+            <tbody>
+              <tr>
+                <th id="account-name-label" scope="row">
+                  name
+                </th>
+                <td>
+                  {user ? (
+                    <form className="account-form" onSubmit={saveName}>
+                      <span className="account-form__controls">
+                        <input
+                          aria-labelledby="account-name-label"
+                          autoComplete="name"
+                          defaultValue={getArtistName(user)}
+                          id="account-name"
+                          maxLength={ARTIST_NAME_MAX_LENGTH}
+                          name="name"
+                          required
+                          type="text"
+                        />
+                        <button
+                          aria-busy={isSaving}
+                          disabled={isSaving}
+                          type="submit"
+                        >
+                          {isSaving ? "saving..." : "save"}
+                        </button>
                       </span>
-                    ) : null}
-                  </form>
-                ) : (
-                  "unknown"
-                )}
-              </td>
-            </tr>
-            <tr>
-              <th scope="row">email</th>
-              <td>{user?.primaryEmailAddress?.emailAddress ?? "unknown"}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p>
-          <button type="button" onClick={() => void signOut({ redirectUrl: "/" })}>
-            sign out
-          </button>
-        </p>
-      </fieldset>
-      <AccountTracks initialTracks={initialTracks} />
+                      {errorMessage ? (
+                        <span
+                          aria-live="polite"
+                          className="account-form__error"
+                        >
+                          {errorMessage}
+                        </span>
+                      ) : null}
+                    </form>
+                  ) : (
+                    "unknown"
+                  )}
+                </td>
+              </tr>
+              <tr>
+                <th scope="row">email</th>
+                <td>{user?.primaryEmailAddress?.emailAddress ?? "unknown"}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            <button
+              type="button"
+              onClick={() => void signOut({ redirectUrl: "/" })}
+            >
+              sign out
+            </button>
+          </p>
+        </fieldset>
+      )}
     </section>
   );
 }

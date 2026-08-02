@@ -487,22 +487,45 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   color: #b00000;
 }
 
+.account-tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.account-tabs a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.account-tabs a:visited {
+  color: #551a8b;
+}
+
+.account-tabs a[aria-current="page"] {
+  color: inherit;
+  font-weight: bold;
+  text-decoration: none;
+}
+
 .account-tracks {
+  width: 100%;
   max-width: none;
-  margin-top: 1rem;
   font-size: 16px;
   line-height: normal;
 }
 
-.account-track {
+.river-file.account-track {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .account-track__actions {
   display: flex;
+  flex-wrap: nowrap;
   align-items: start;
   gap: 0.5rem;
   padding-top: 0.25rem;
+  white-space: nowrap;
 }
 
 .account-track__actions .river-file__permalink {
@@ -990,7 +1013,7 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
     scroll-margin-top: 9rem;
   }
 
-  .account-track {
+  .river-file.account-track {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 0.5rem;
