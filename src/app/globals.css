@@ -497,8 +497,6 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 .account-tracks {
   width: 100%;
   max-width: none;
-  font-size: 16px;
-  line-height: normal;
 }
 
 .river-file.account-track {
