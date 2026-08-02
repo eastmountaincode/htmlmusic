@@ -14,18 +14,30 @@ import type { RiverComment } from "@/db/comments";
 
 type LoadStatus = "idle" | "loading" | "loaded" | "error";
 
+async function readJsonResponse<T>(response: Response) {
+  const responseText = await response.text();
+
+  if (!responseText) return null;
+
+  try {
+    return JSON.parse(responseText) as T;
+  } catch {
+    return null;
+  }
+}
+
 async function requestComments(trackId: string, signal?: AbortSignal) {
   const response = await fetch(
     `/api/comments?trackId=${encodeURIComponent(trackId)}`,
     { cache: "no-store", signal },
   );
-  const payload = (await response.json()) as {
+  const payload = await readJsonResponse<{
     comments?: RiverComment[];
     error?: string;
-  };
+  }>(response);
 
-  if (!response.ok || !payload.comments) {
-    throw new Error(payload.error ?? "Comments could not be loaded.");
+  if (!response.ok || !payload?.comments) {
+    throw new Error(payload?.error ?? "Comments could not be loaded.");
   }
 
   return payload.comments;
@@ -139,13 +151,13 @@ export function RiverComments({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ body: nextBody, trackId }),
       });
-      const payload = (await response.json()) as {
+      const payload = await readJsonResponse<{
         comment?: RiverComment;
         error?: string;
-      };
+      }>(response);
 
-      if (!response.ok || !payload.comment) {
-        throw new Error(payload.error ?? "Comment could not be posted.");
+      if (!response.ok || !payload?.comment) {
+        throw new Error(payload?.error ?? "Comment could not be posted.");
       }
 
       setComments((current) => [...current, payload.comment as RiverComment]);
@@ -192,12 +204,12 @@ export function RiverComments({
             {comments.map((comment) => (
               <li key={comment.id}>
                 <p className="river-comments__text">{comment.body}</p>
-                <small>
-                  {comment.authorName} ·{" "}
+                <div className="river-comments__metadata">
+                  {comment.authorName},{" "}
                   <time dateTime={comment.createdAt}>
                     {formatCommentTime(comment.createdAt)}
                   </time>
-                </small>
+                </div>
               </li>
             ))}
           </ol>

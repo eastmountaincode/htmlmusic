@@ -1,26 +1,34 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { riverSongs } from "@/app/river-songs";
+import { isKnownRiverTrack } from "@/app/river-songs";
 import {
   createComment,
   listComments,
   type RiverComment,
 } from "@/db/comments";
+import { upsertProfile } from "@/db/profiles";
 import { getArtistName } from "@/lib/artist-name";
-
-const riverTrackIds = new Set(riverSongs.map((song) => song.id));
-
-function isValidTrackId(trackId: string) {
-  return riverTrackIds.has(trackId);
-}
 
 export async function GET(request: Request) {
   const trackId = new URL(request.url).searchParams.get("trackId")?.trim();
 
-  if (!trackId || !isValidTrackId(trackId)) {
+  if (!trackId || !(await isKnownRiverTrack(trackId))) {
     return Response.json({ error: "Unknown recording." }, { status: 400 });
   }
 
-  const comments = await listComments(trackId);
+  let comments: RiverComment[];
+
+  try {
+    comments = await listComments(trackId);
+  } catch (error) {
+    console.error("[api/comments] failed to list comments", {
+      error,
+      trackId,
+    });
+    return Response.json(
+      { error: "Comments could not be loaded." },
+      { status: 502 },
+    );
+  }
 
   return Response.json(
     { comments },
@@ -54,7 +62,7 @@ export async function POST(request: Request) {
   const body = typeof rawBody === "string" ? rawBody.trim() : "";
   const trackId = typeof rawTrackId === "string" ? rawTrackId.trim() : "";
 
-  if (!isValidTrackId(trackId)) {
+  if (!trackId || !(await isKnownRiverTrack(trackId))) {
     return Response.json({ error: "Unknown recording." }, { status: 400 });
   }
 
@@ -71,16 +79,31 @@ export async function POST(request: Request) {
   }
 
   const authorName = getArtistName(user);
-  const comment: RiverComment = {
+  const comment = {
     id: crypto.randomUUID(),
     trackId,
     authorId: userId,
-    authorName,
     body,
     createdAt: new Date().toISOString(),
   };
 
-  await createComment(comment);
+  try {
+    await upsertProfile(userId, authorName, comment.createdAt);
+    await createComment(comment);
+  } catch (error) {
+    console.error("[api/comments] failed to create comment", {
+      error,
+      trackId,
+      userId,
+    });
+    return Response.json(
+      { error: "Comment could not be posted." },
+      { status: 502 },
+    );
+  }
 
-  return Response.json({ comment }, { status: 201 });
+  return Response.json(
+    { comment: { ...comment, authorName } satisfies RiverComment },
+    { status: 201 },
+  );
 }

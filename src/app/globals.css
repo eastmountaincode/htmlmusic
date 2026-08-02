@@ -554,6 +554,92 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   overflow-wrap: anywhere;
 }
 
+.plain-link {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.plain-link:visited {
+  color: #551a8b;
+}
+
+.upload-form {
+  min-width: 0;
+}
+
+.upload-table th {
+  width: 6rem;
+  vertical-align: middle;
+}
+
+.upload-table td {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  vertical-align: middle;
+}
+
+.upload-table input[type="file"] {
+  width: 100%;
+  height: calc(1lh + 0.25rem + 2px);
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  cursor: pointer;
+}
+
+.upload-table input[type="file"]::file-selector-button {
+  height: calc(1lh + 0.25rem);
+  margin: 0 0.5rem 0 0;
+  padding: 0.125rem 0.5rem;
+  border: 0;
+  border-right: 1px solid #000000;
+  border-radius: 0;
+  background: #efefef;
+  color: #111111;
+  font: inherit;
+  cursor: pointer;
+}
+
+.upload-table input[type="file"]:active:not(:disabled)::file-selector-button {
+  background: #dddddd;
+}
+
+.upload-table input[type="file"]:disabled,
+.upload-table input[type="file"]:disabled::file-selector-button {
+  color: #777777;
+  cursor: default;
+}
+
+.upload-form__cover-field {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.upload-form__cover-preview {
+  display: block;
+  width: 128px;
+  height: 128px;
+  object-fit: cover;
+}
+
+.upload-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.upload-form progress {
+  display: block;
+  width: 100%;
+}
+
+.upload-form__error {
+  color: #b00000;
+}
+
 .recording-page a {
   color: #0000ee;
   text-decoration: underline;
@@ -772,6 +858,12 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   margin-bottom: 0.1rem !important;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.river-comments__metadata {
+  color: #444444;
+  font-size: 14px;
+  line-height: 1.15;
 }
 
 .river-comments__form {

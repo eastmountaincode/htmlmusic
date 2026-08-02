@@ -23,6 +23,7 @@ export function DevOutlineToggle() {
         event.metaKey ||
         event.ctrlKey ||
         event.altKey ||
+        typeof event.key !== "string" ||
         event.key.toLowerCase() !== "b" ||
         isEditableTarget(event.target)
       ) {

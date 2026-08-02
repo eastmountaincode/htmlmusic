@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { queryD1, runD1 } from "@/db/d1";
 
 export type RiverComment = {
   id: string;
@@ -20,10 +20,6 @@ type CommentRow = {
   created_at: string;
 };
 
-function getCommentsDb() {
-  return getCloudflareContext().env.DB;
-}
-
 function fromCommentRow(row: CommentRow): RiverComment {
   return {
     id: row.id,
@@ -36,50 +32,40 @@ function fromCommentRow(row: CommentRow): RiverComment {
 }
 
 export async function listComments(trackId: string) {
-  const result = await getCommentsDb()
-    .prepare(
-      `SELECT id, track_id, author_id, author_name, body, created_at
-       FROM comments
-       WHERE track_id = ?
-       ORDER BY created_at ASC, id ASC
-       LIMIT 100`,
-    )
-    .bind(trackId)
-    .all<CommentRow>();
+  const rows = await queryD1<CommentRow>(
+    `SELECT
+       comment.id,
+       comment.track_id,
+       comment.author_id,
+       profile.artist_name AS author_name,
+       comment.body,
+       comment.created_at
+     FROM comments AS comment
+     INNER JOIN profiles AS profile ON profile.user_id = comment.author_id
+     WHERE comment.track_id = ?
+     ORDER BY comment.created_at ASC, comment.id ASC
+     LIMIT 100`,
+    [trackId],
+  );
 
-  return result.results.map(fromCommentRow);
+  return rows.map(fromCommentRow);
 }
 
-export async function createComment(comment: RiverComment) {
-  await getCommentsDb()
-    .prepare(
-      `INSERT INTO comments
-       (id, track_id, author_id, author_name, body, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-    .bind(
+export async function createComment(
+  comment: Omit<RiverComment, "authorName">,
+) {
+  await runD1(
+    `INSERT INTO comments
+     (id, track_id, author_id, body, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
       comment.id,
       comment.trackId,
       comment.authorId,
-      comment.authorName,
       comment.body,
       comment.createdAt,
-    )
-    .run();
+    ],
+  );
 
   return comment;
-}
-
-export async function updateCommentAuthorName(
-  authorId: string,
-  authorName: string,
-) {
-  await getCommentsDb()
-    .prepare(
-      `UPDATE comments
-       SET author_name = ?
-       WHERE author_id = ?`,
-    )
-    .bind(authorName, authorId)
-    .run();
 }

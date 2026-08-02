@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { riverSongs } from "@/app/river-songs";
+import { getRiverSong } from "@/app/river-songs";
 import { BackToDiscover } from "@/components/discover-return-state";
 import { HtmlAudioControls } from "@/components/persistent-audio-player";
 import { RecordingShare } from "@/components/recording-share";
@@ -11,19 +11,13 @@ type RecordingPageProps = {
   params: Promise<{ id: string }>;
 };
 
-function getRecording(id: string) {
-  return riverSongs.find((song) => song.id === id);
-}
-
-export function generateStaticParams() {
-  return riverSongs.map((song) => ({ id: song.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: RecordingPageProps): Promise<Metadata> {
   const { id } = await params;
-  const song = getRecording(id);
+  const song = await getRiverSong(id);
 
   if (!song) return {};
 
@@ -60,7 +54,7 @@ export async function generateMetadata({
 
 export default async function RecordingPage({ params }: RecordingPageProps) {
   const { id } = await params;
-  const song = getRecording(id);
+  const song = await getRiverSong(id);
 
   if (!song) notFound();
 

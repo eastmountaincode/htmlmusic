@@ -211,13 +211,17 @@ export function EmailAuthForm({ intent }: { intent: AuthIntent }) {
     if (!signIn) return;
 
     setErrorMessage("");
-    const { error } = await signIn.sso({
-      strategy: "oauth_google",
-      redirectCallbackUrl: "/sso-callback",
-      redirectUrl: "/",
-    });
+    try {
+      const { error } = await signIn.sso({
+        strategy: "oauth_google",
+        redirectCallbackUrl: "/sso-callback",
+        redirectUrl: "/",
+      });
 
-    if (error) setErrorMessage(getErrorMessage(error));
+      if (error) setErrorMessage(getErrorMessage(error));
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+    }
   };
 
   const resetFlow = async () => {

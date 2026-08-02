@@ -13,20 +13,13 @@ export function HeaderAuth() {
   const pathname = usePathname();
   const { isLoaded, isSignedIn, user } = useUser();
 
-  if (!isLoaded) {
-    return (
-      <span className="header-auth" data-dev-outline="header-auth-loading">
-        ...
-      </span>
-    );
-  }
-
-  if (!isSignedIn) {
+  if (!isLoaded || !isSignedIn) {
     return (
       <nav
+        aria-busy={!isLoaded}
         aria-label="account"
         className="header-auth"
-        data-dev-outline="header-auth"
+        data-dev-outline={isLoaded ? "header-auth" : "header-auth-loading"}
       >
         <Link
           aria-current={isActivePath(pathname, "/sign-in") ? "page" : undefined}

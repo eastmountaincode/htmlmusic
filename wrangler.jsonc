@@ -18,5 +18,11 @@
       "database_id": "cc46f8a3-76fc-43b3-a765-2c8a42144d0f",
       "migrations_dir": "migrations"
     }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "RECORDINGS",
+      "bucket_name": "html-music-audio"
+    }
   ]
 }

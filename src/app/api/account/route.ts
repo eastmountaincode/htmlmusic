@@ -1,5 +1,5 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
-import { updateCommentAuthorName } from "@/db/comments";
+import { upsertProfile } from "@/db/profiles";
 import { ARTIST_NAME_MAX_LENGTH } from "@/lib/artist-name";
 
 const controlCharacters = /[\u0000-\u001f\u007f]/;
@@ -41,7 +41,7 @@ export async function PATCH(request: Request) {
   await client.users.updateUserMetadata(userId, {
     publicMetadata: { artistName: name },
   });
-  await updateCommentAuthorName(userId, name);
+  await upsertProfile(userId, name);
 
   return Response.json({ name });
 }
