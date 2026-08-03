@@ -1,5 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { upsertProfile } from "@/db/profiles";
+import { getOwnedFolder } from "@/db/folders";
 import { createPendingRecording } from "@/db/recordings";
 import { getArtistName } from "@/lib/artist-name";
 import { createR2UploadUrl } from "@/lib/r2";
@@ -14,6 +15,7 @@ type UploadRequest = {
   audio?: UploadFileDescription;
   artwork?: UploadFileDescription | null;
   durationSeconds?: number | null;
+  folderId?: string | null;
 };
 
 function isFileDescription(value: unknown): value is UploadFileDescription {
@@ -82,6 +84,16 @@ export async function POST(request: Request) {
       ? rawDuration
       : null;
 
+  if (
+    payload.folderId !== null &&
+    payload.folderId !== undefined &&
+    typeof payload.folderId !== "string"
+  ) {
+    return Response.json({ error: "Invalid folder." }, { status: 400 });
+  }
+
+  const folderId = payload.folderId?.trim() || null;
+
   const user = await currentUser();
   if (!user) {
     return Response.json({ error: "Sign in to upload." }, { status: 401 });
@@ -96,6 +108,13 @@ export async function POST(request: Request) {
   const artistName = getArtistName(user);
 
   try {
+    await upsertProfile(userId, artistName, createdAt);
+    const folder = folderId ? await getOwnedFolder(folderId, userId) : null;
+
+    if (folderId && !folder) {
+      return Response.json({ error: "Folder not found." }, { status: 400 });
+    }
+
     const [audioUploadUrl, artworkUploadUrl] = await Promise.all([
       createR2UploadUrl(audioKey, audio.contentType),
       artworkKey && artwork
@@ -103,10 +122,12 @@ export async function POST(request: Request) {
         : Promise.resolve(null),
     ]);
 
-    await upsertProfile(userId, artistName, createdAt);
     await createPendingRecording({
       id,
       ownerId: userId,
+      folderId: folder?.id ?? null,
+      folderName: folder?.name ?? null,
+      folderAddedAt: folder ? createdAt : null,
       filename: payload.audio.name.trim(),
       audioKey,
       audioType: audio.contentType,

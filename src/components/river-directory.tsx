@@ -9,11 +9,14 @@ import {
   type MouseEvent,
 } from "react";
 import { useDiscoverReturnState } from "@/components/discover-return-state";
+import { RiverFolderFile } from "@/components/river-folder-row";
 import {
   HtmlAudioControls,
   useAudioPlayer,
 } from "@/components/persistent-audio-player";
 import {
+  riverEntryId,
+  type RiverEntry,
   RiverRecordingCells,
   RiverRecordingIcon,
   type RiverSong,
@@ -71,7 +74,7 @@ export function RiverFile({
     <li
       aria-current={isCurrent ? "true" : undefined}
       className="river-file"
-      id={song.id}
+      id={`track:${song.id}`}
     >
       <details name="river-player" ref={trackDetailsRef}>
         <summary className="river-file__summary river-file__summary--with-permalink">
@@ -120,19 +123,19 @@ export function RiverFile({
 
 export function RiverDirectory({
   initialNextCursor,
-  initialSongs,
+  initialEntries,
 }: {
   initialNextCursor: string | null;
-  initialSongs: RiverSong[];
+  initialEntries: RiverEntry[];
 }) {
   const { currentTrack, registerQueue } = useAudioPlayer();
   const {
-    markRecordingNavigation,
+    markDirectoryNavigation,
     returnState,
     updateDirectoryState,
   } = useDiscoverReturnState();
-  const [songs, setSongs] = useState(
-    () => returnState?.songs ?? initialSongs,
+  const [entries, setEntries] = useState(
+    () => returnState?.entries ?? initialEntries,
   );
   const [nextCursor, setNextCursor] = useState(
     () => returnState?.nextCursor ?? initialNextCursor,
@@ -141,20 +144,20 @@ export function RiverDirectory({
   const [loadMoreError, setLoadMoreError] = useState("");
   const restoreScrollYRef = useRef(returnState?.scrollY ?? null);
   const restoreAnchorRef = useRef(
-    returnState?.anchorTrackId && returnState.anchorViewportTop !== null
+    returnState?.anchorEntryId && returnState.anchorViewportTop !== null
       ? {
-          trackId: returnState.anchorTrackId,
+          entryId: returnState.anchorEntryId,
           viewportTop: returnState.anchorViewportTop,
         }
       : null,
   );
 
-  function rememberRecordingNavigation(trackId: string) {
+  function rememberDirectoryNavigation(entryId: string) {
     const anchorViewportTop =
-      document.getElementById(trackId)?.getBoundingClientRect().top ?? null;
+      document.getElementById(entryId)?.getBoundingClientRect().top ?? null;
 
-    updateDirectoryState(songs, nextCursor);
-    markRecordingNavigation(trackId, window.scrollY, anchorViewportTop);
+    updateDirectoryState(entries, nextCursor);
+    markDirectoryNavigation(entryId, window.scrollY, anchorViewportTop);
   }
 
   async function loadMore() {
@@ -171,16 +174,16 @@ export function RiverDirectory({
       const payload = (await response.json()) as {
         error?: string;
         nextCursor?: string | null;
-        songs?: RiverSong[];
+        entries?: RiverEntry[];
       };
 
-      if (!response.ok || !payload.songs || payload.nextCursor === undefined) {
+      if (!response.ok || !payload.entries || payload.nextCursor === undefined) {
         throw new Error(payload.error ?? "More recordings could not be loaded.");
       }
 
-      const nextSongs = payload.songs;
+      const nextEntries = payload.entries;
       const followingCursor = payload.nextCursor;
-      setSongs((currentSongs) => [...currentSongs, ...nextSongs]);
+      setEntries((currentEntries) => [...currentEntries, ...nextEntries]);
       setNextCursor(followingCursor);
     } catch (loadError) {
       setLoadMoreError(
@@ -194,12 +197,16 @@ export function RiverDirectory({
   }
 
   useEffect(() => {
-    registerQueue(songs);
-  }, [registerQueue, songs]);
+    registerQueue(
+      entries.flatMap((entry) =>
+        entry.kind === "track" ? [entry.song] : [],
+      ),
+    );
+  }, [entries, registerQueue]);
 
   useEffect(() => {
-    updateDirectoryState(songs, nextCursor);
-  }, [nextCursor, songs, updateDirectoryState]);
+    updateDirectoryState(entries, nextCursor);
+  }, [entries, nextCursor, updateDirectoryState]);
 
   useEffect(() => {
     const scrollY = restoreScrollYRef.current;
@@ -210,7 +217,7 @@ export function RiverDirectory({
       secondFrame = window.requestAnimationFrame(() => {
         const anchor = restoreAnchorRef.current;
         const anchorElement = anchor
-          ? document.getElementById(anchor.trackId)
+          ? document.getElementById(anchor.entryId)
           : null;
         const top = anchor && anchorElement
           ? window.scrollY +
@@ -231,14 +238,25 @@ export function RiverDirectory({
   return (
     <section aria-label="Newest music" className="directory-index">
       <ol className="river-directory__list" id="discover-recordings">
-        {songs.map((song) => {
-          const isCurrent = currentTrack?.id === song.id;
+        {entries.map((entry) => {
+          if (entry.kind === "folder") {
+            return (
+              <RiverFolderFile
+                folder={entry.folder}
+                key={riverEntryId(entry)}
+                onOpenPage={rememberDirectoryNavigation}
+              />
+            );
+          }
 
+          const { song } = entry;
           return (
             <RiverFile
-              isCurrent={isCurrent}
-              key={song.id}
-              onOpenPage={rememberRecordingNavigation}
+              isCurrent={currentTrack?.id === song.id}
+              key={riverEntryId(entry)}
+              onOpenPage={(trackId) =>
+                rememberDirectoryNavigation(`track:${trackId}`)
+              }
               song={song}
             />
           );

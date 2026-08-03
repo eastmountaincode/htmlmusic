@@ -5,6 +5,9 @@ import { queryD1, runD1 } from "@/db/d1";
 export type StoredRecording = {
   id: string;
   ownerId: string;
+  folderId: string | null;
+  folderName: string | null;
+  folderAddedAt: string | null;
   filename: string;
   artist: string;
   audioKey: string;
@@ -21,6 +24,9 @@ export type StoredRecording = {
 type RecordingRow = {
   id: string;
   owner_id: string;
+  folder_id: string | null;
+  folder_name: string | null;
+  folder_added_at: string | null;
   filename: string;
   artist: string;
   audio_key: string;
@@ -35,7 +41,8 @@ type RecordingRow = {
 };
 
 const recordingColumns = `
-  recording.id, recording.owner_id, recording.filename,
+  recording.id, recording.owner_id, recording.folder_id,
+  folder.name AS folder_name, recording.folder_added_at, recording.filename,
   profile.artist_name AS artist,
   recording.audio_key, recording.audio_type, recording.audio_size,
   recording.artwork_key, recording.artwork_type, recording.artwork_size,
@@ -46,6 +53,9 @@ function fromRecordingRow(row: RecordingRow): StoredRecording {
   return {
     id: row.id,
     ownerId: row.owner_id,
+    folderId: row.folder_id,
+    folderName: row.folder_name,
+    folderAddedAt: row.folder_added_at,
     filename: row.filename,
     artist: row.artist,
     audioKey: row.audio_key,
@@ -65,12 +75,15 @@ export async function createPendingRecording(
 ) {
   await runD1(
     `INSERT INTO recordings (
-       id, owner_id, filename, audio_key, audio_type, audio_size,
+       id, owner_id, folder_id, folder_added_at, filename,
+       audio_key, audio_type, audio_size,
        artwork_key, artwork_type, artwork_size, duration_seconds, status, created_at
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       recording.id,
       recording.ownerId,
+      recording.folderId,
+      recording.folderAddedAt,
       recording.filename,
       recording.audioKey,
       recording.audioType,
@@ -90,6 +103,7 @@ export async function getOwnedPendingRecording(id: string, ownerId: string) {
     `SELECT ${recordingColumns}
      FROM recordings AS recording
      INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
      WHERE recording.id = ?
        AND recording.owner_id = ?
        AND recording.status = 'pending'
@@ -105,6 +119,7 @@ export async function getOwnedRecording(id: string, ownerId: string) {
     `SELECT ${recordingColumns}
      FROM recordings AS recording
      INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
      WHERE recording.id = ? AND recording.owner_id = ?
      LIMIT 1`,
     [id, ownerId],
@@ -127,6 +142,7 @@ export async function getPublishedRecording(id: string) {
     `SELECT ${recordingColumns}
      FROM recordings AS recording
      INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
      WHERE recording.id = ? AND recording.status = 'ready'
      LIMIT 1`,
     [id],
@@ -141,6 +157,7 @@ export async function listPublishedRecordings(limit = 500) {
     `SELECT ${recordingColumns}
      FROM recordings AS recording
      INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
      WHERE recording.status = 'ready'
      ORDER BY recording.created_at DESC, recording.id DESC
      LIMIT ?`,
@@ -159,6 +176,7 @@ export async function listPublishedRecordingsByOwner(
     `SELECT ${recordingColumns}
      FROM recordings AS recording
      INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
      WHERE recording.owner_id = ? AND recording.status = 'ready'
      ORDER BY recording.created_at DESC, recording.id DESC
      LIMIT ?`,
@@ -166,6 +184,65 @@ export async function listPublishedRecordingsByOwner(
   );
 
   return rows.map(fromRecordingRow);
+}
+
+export async function listPublishedLooseRecordings(
+  ownerId: string | null = null,
+  limit = 500,
+) {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), 500));
+  const ownerClause = ownerId ? "AND recording.owner_id = ?" : "";
+  const params = ownerId ? [ownerId, safeLimit] : [safeLimit];
+  const rows = await queryD1<RecordingRow>(
+    `SELECT ${recordingColumns}
+     FROM recordings AS recording
+     INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
+     WHERE recording.status = 'ready'
+       AND recording.folder_id IS NULL
+       ${ownerClause}
+     ORDER BY recording.created_at DESC, recording.id DESC
+     LIMIT ?`,
+    params,
+  );
+
+  return rows.map(fromRecordingRow);
+}
+
+export async function listPublishedRecordingsByFolder(
+  folderId: string,
+  ownerId: string,
+  limit = 500,
+) {
+  const safeLimit = Math.max(1, Math.min(Math.trunc(limit), 500));
+  const rows = await queryD1<RecordingRow>(
+    `SELECT ${recordingColumns}
+     FROM recordings AS recording
+     INNER JOIN profiles AS profile ON profile.user_id = recording.owner_id
+     LEFT JOIN folders AS folder ON folder.id = recording.folder_id
+     WHERE recording.folder_id = ?
+       AND recording.owner_id = ?
+       AND recording.status = 'ready'
+     ORDER BY recording.created_at DESC, recording.id DESC
+     LIMIT ?`,
+    [folderId, ownerId, safeLimit],
+  );
+
+  return rows.map(fromRecordingRow);
+}
+
+export async function updateOwnedRecordingFolder(
+  id: string,
+  ownerId: string,
+  folderId: string | null,
+  folderAddedAt: string | null,
+) {
+  await runD1(
+    `UPDATE recordings
+     SET folder_id = ?, folder_added_at = ?
+     WHERE id = ? AND owner_id = ?`,
+    [folderId, folderAddedAt, id, ownerId],
+  );
 }
 
 export async function deleteOwnedRecording(id: string, ownerId: string) {

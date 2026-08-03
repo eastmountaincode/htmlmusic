@@ -4,10 +4,36 @@ import type { MouseEventHandler } from "react";
 import type { AudioTrack } from "@/components/persistent-audio-player";
 
 export type RiverSong = AudioTrack & {
+  folderId: string | null;
+  folderName: string | null;
   length: string;
   posted: string;
   postedAt: string;
 };
+
+export type RiverFolder = {
+  id: string;
+  name: string;
+  artist: string;
+  artistId: string;
+  trackCount: number;
+  posted: string;
+  postedAt: string;
+};
+
+export type RiverEntry =
+  | { kind: "track"; song: RiverSong }
+  | { kind: "folder"; folder: RiverFolder };
+
+export function riverEntryId(entry: RiverEntry) {
+  return entry.kind === "track"
+    ? `track:${entry.song.id}`
+    : `folder:${entry.folder.id}`;
+}
+
+export function folderPath(folder: Pick<RiverFolder, "artistId" | "id">) {
+  return `/artists/${encodeURIComponent(folder.artistId)}/folders/${encodeURIComponent(folder.id)}`;
+}
 
 export function RiverRecordingIcon({ song }: { song: RiverSong }) {
   return (

@@ -4,13 +4,17 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ProfileTracks } from "@/components/profile-tracks";
+import {
+  FolderManager,
+  type ManagedFolder,
+} from "@/components/folder-manager";
 import type { RiverSong } from "@/components/river-recording-row";
 import {
   ARTIST_NAME_MAX_LENGTH,
   getArtistName,
 } from "@/lib/artist-name";
 
-type AccountTab = "settings" | "tracks";
+type AccountTab = "settings" | "tracks" | "folders";
 
 type ClerkWindow = Window & {
   __internal_onBeforeSetActive?: (
@@ -35,15 +39,26 @@ function AccountTabs({ activeTab }: { activeTab: AccountTab }) {
       >
         tracks
       </Link>
+      <Link
+        aria-current={activeTab === "folders" ? "page" : undefined}
+        href="/account?tab=folders"
+        prefetch={false}
+      >
+        folders
+      </Link>
     </nav>
   );
 }
 
 export function AccountPanel({
   activeTab,
+  artistId,
+  initialFolders,
   initialTracks,
 }: {
   activeTab: AccountTab;
+  artistId: string;
+  initialFolders: ManagedFolder[];
   initialTracks: RiverSong[];
 }) {
   const { signOut } = useClerk();
@@ -130,7 +145,7 @@ export function AccountPanel({
         <AccountTabs activeTab={activeTab} />
         <fieldset
           className={`plain-fieldset${
-            activeTab === "tracks" ? " profile-tracks" : ""
+            activeTab !== "settings" ? " profile-tracks" : ""
           }`}
         >
           <legend>{activeTab}</legend>
@@ -144,7 +159,14 @@ export function AccountPanel({
     <section className="page-shell account-page">
       <AccountTabs activeTab={activeTab} />
       {activeTab === "tracks" ? (
-        <ProfileTracks allowDelete initialTracks={initialTracks} />
+        <ProfileTracks
+          allowDelete
+          allowFolderManagement
+          folders={initialFolders}
+          initialTracks={initialTracks}
+        />
+      ) : activeTab === "folders" ? (
+        <FolderManager artistId={artistId} initialFolders={initialFolders} />
       ) : (
         <fieldset className="plain-fieldset">
           <legend>settings</legend>

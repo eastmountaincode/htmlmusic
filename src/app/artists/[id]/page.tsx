@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { getArtistRiverSongs } from "@/app/river-songs";
+import { getArtistRiverEntries } from "@/app/river-songs";
 import { BackToDiscover } from "@/components/discover-return-state";
-import { ProfileTracks } from "@/components/profile-tracks";
+import { ProfileDirectory } from "@/components/profile-directory";
 import { getArtistProfile } from "@/db/profiles";
 
 type ArtistPageProps = {
@@ -16,7 +16,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
 
   if (!profile) notFound();
 
-  const tracks = await getArtistRiverSongs(profile.userId);
+  const entries = await getArtistRiverEntries(profile.userId);
 
   return (
     <main>
@@ -24,8 +24,8 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         <p className="artist-page__back">
           <BackToDiscover />
         </p>
-        <ProfileTracks
-          initialTracks={tracks}
+        <ProfileDirectory
+          initialEntries={entries}
           key={profile.userId}
           legend={profile.artistName}
         />

@@ -11,8 +11,8 @@ export default async function Home() {
   return (
     <main>
       <RiverDirectory
+        initialEntries={initialPage.entries}
         initialNextCursor={initialPage.nextCursor}
-        initialSongs={initialPage.songs}
       />
     </main>
   );

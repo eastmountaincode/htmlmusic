@@ -13,12 +13,12 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import type { RiverSong } from "@/components/river-recording-row";
+import type { RiverEntry } from "@/components/river-recording-row";
 
 export type DiscoverReturnState = {
-  anchorTrackId: string | null;
+  anchorEntryId: string | null;
   anchorViewportTop: number | null;
-  songs: RiverSong[];
+  entries: RiverEntry[];
   nextCursor: string | null;
   scrollY: number;
 };
@@ -28,25 +28,49 @@ type ArtistTrackOrigin = {
   trackId: string;
 };
 
+type ArtistFolderOrigin = {
+  artistId: string;
+  folderId: string;
+};
+
+type FolderTrackOrigin = {
+  artistId: string;
+  folderId: string;
+  folderName: string;
+  trackId: string;
+};
+
 type DiscoverReturnContextValue = {
+  artistFolderOrigin: ArtistFolderOrigin | null;
   artistTrackOrigin: ArtistTrackOrigin | null;
+  folderTrackOrigin: FolderTrackOrigin | null;
   returnState: DiscoverReturnState | null;
-  originTrackId: string | null;
+  originEntryId: string | null;
   updateDirectoryState: (
-    songs: RiverSong[],
+    entries: RiverEntry[],
     nextCursor: string | null,
   ) => void;
-  markRecordingNavigation: (
-    trackId: string,
+  markDirectoryNavigation: (
+    entryId: string,
     scrollY: number,
     anchorViewportTop: number | null,
   ) => void;
   markArtistTrackNavigation: (trackId: string, artistId: string) => void;
+  markArtistFolderNavigation: (folderId: string, artistId: string) => void;
+  markFolderTrackNavigation: (origin: FolderTrackOrigin) => void;
   consumeArtistTrackNavigation: (
     trackId: string,
     artistId: string,
   ) => boolean;
-  consumeReturnState: (trackId: string) => DiscoverReturnState | null;
+  consumeArtistFolderNavigation: (
+    folderId: string,
+    artistId: string,
+  ) => boolean;
+  consumeFolderTrackNavigation: (
+    trackId: string,
+    folderId: string,
+  ) => boolean;
+  consumeReturnState: (entryId: string) => DiscoverReturnState | null;
 };
 
 const DiscoverReturnContext =
@@ -55,22 +79,28 @@ const DiscoverReturnContext =
 export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
+  const artistFolderOriginRef = useRef<ArtistFolderOrigin | null>(null);
   const artistTrackOriginRef = useRef<ArtistTrackOrigin | null>(null);
+  const folderTrackOriginRef = useRef<FolderTrackOrigin | null>(null);
   const returnStateRef = useRef<DiscoverReturnState | null>(null);
-  const originTrackIdRef = useRef<string | null>(null);
+  const originEntryIdRef = useRef<string | null>(null);
+  const [artistFolderOrigin, setArtistFolderOrigin] =
+    useState<ArtistFolderOrigin | null>(null);
   const [artistTrackOrigin, setArtistTrackOrigin] =
     useState<ArtistTrackOrigin | null>(null);
+  const [folderTrackOrigin, setFolderTrackOrigin] =
+    useState<FolderTrackOrigin | null>(null);
   const [returnState, setReturnState] =
     useState<DiscoverReturnState | null>(null);
-  const [originTrackId, setOriginTrackId] = useState<string | null>(null);
+  const [originEntryId, setOriginEntryId] = useState<string | null>(null);
 
   const updateDirectoryState = useCallback(
-    (songs: RiverSong[], nextCursor: string | null) => {
+    (entries: RiverEntry[], nextCursor: string | null) => {
       const nextState = {
-        anchorTrackId: returnStateRef.current?.anchorTrackId ?? null,
+        anchorEntryId: returnStateRef.current?.anchorEntryId ?? null,
         anchorViewportTop:
           returnStateRef.current?.anchorViewportTop ?? null,
-        songs: [...songs],
+        entries: [...entries],
         nextCursor,
         scrollY: returnStateRef.current?.scrollY ?? 0,
       };
@@ -81,9 +111,9 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const markRecordingNavigation = useCallback(
+  const markDirectoryNavigation = useCallback(
     (
-      trackId: string,
+      entryId: string,
       scrollY: number,
       anchorViewportTop: number | null,
     ) => {
@@ -92,7 +122,7 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
       if (current) {
         const nextState = {
           ...current,
-          anchorTrackId: trackId,
+          anchorEntryId: entryId,
           anchorViewportTop:
             anchorViewportTop !== null && Number.isFinite(anchorViewportTop)
               ? anchorViewportTop
@@ -103,8 +133,8 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
         setReturnState(nextState);
       }
 
-      originTrackIdRef.current = trackId;
-      setOriginTrackId(trackId);
+      originEntryIdRef.current = entryId;
+      setOriginEntryId(entryId);
     },
     [],
   );
@@ -114,6 +144,23 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
       const nextOrigin = { artistId, trackId };
       artistTrackOriginRef.current = nextOrigin;
       setArtistTrackOrigin(nextOrigin);
+    },
+    [],
+  );
+
+  const markArtistFolderNavigation = useCallback(
+    (folderId: string, artistId: string) => {
+      const nextOrigin = { artistId, folderId };
+      artistFolderOriginRef.current = nextOrigin;
+      setArtistFolderOrigin(nextOrigin);
+    },
+    [],
+  );
+
+  const markFolderTrackNavigation = useCallback(
+    (origin: FolderTrackOrigin) => {
+      folderTrackOriginRef.current = origin;
+      setFolderTrackOrigin(origin);
     },
     [],
   );
@@ -136,6 +183,42 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const consumeArtistFolderNavigation = useCallback(
+    (folderId: string, artistId: string) => {
+      const currentOrigin = artistFolderOriginRef.current;
+
+      if (
+        currentOrigin?.folderId !== folderId ||
+        currentOrigin.artistId !== artistId
+      ) {
+        return false;
+      }
+
+      artistFolderOriginRef.current = null;
+      setArtistFolderOrigin(null);
+      return true;
+    },
+    [],
+  );
+
+  const consumeFolderTrackNavigation = useCallback(
+    (trackId: string, folderId: string) => {
+      const currentOrigin = folderTrackOriginRef.current;
+
+      if (
+        currentOrigin?.trackId !== trackId ||
+        currentOrigin.folderId !== folderId
+      ) {
+        return false;
+      }
+
+      folderTrackOriginRef.current = null;
+      setFolderTrackOrigin(null);
+      return true;
+    },
+    [],
+  );
+
   useEffect(() => {
     const previousPathname = previousPathnameRef.current;
     previousPathnameRef.current = pathname;
@@ -143,39 +226,55 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
     if (pathname !== "/" || previousPathname === "/") return;
 
     returnStateRef.current = null;
-    originTrackIdRef.current = null;
+    originEntryIdRef.current = null;
+    artistFolderOriginRef.current = null;
     artistTrackOriginRef.current = null;
+    folderTrackOriginRef.current = null;
     setReturnState(null);
-    setOriginTrackId(null);
+    setOriginEntryId(null);
+    setArtistFolderOrigin(null);
     setArtistTrackOrigin(null);
+    setFolderTrackOrigin(null);
   }, [pathname]);
 
-  const consumeReturnState = useCallback((trackId: string) => {
-    if (originTrackIdRef.current !== trackId) return null;
+  const consumeReturnState = useCallback((entryId: string) => {
+    if (originEntryIdRef.current !== entryId) return null;
 
-    originTrackIdRef.current = null;
-    setOriginTrackId(null);
+    originEntryIdRef.current = null;
+    setOriginEntryId(null);
     return returnStateRef.current;
   }, []);
 
   const value = useMemo(
     () => ({
+      artistFolderOrigin,
       artistTrackOrigin,
+      folderTrackOrigin,
       returnState,
-      originTrackId,
+      originEntryId,
       updateDirectoryState,
-      markRecordingNavigation,
+      markDirectoryNavigation,
       markArtistTrackNavigation,
+      markArtistFolderNavigation,
+      markFolderTrackNavigation,
       consumeArtistTrackNavigation,
+      consumeArtistFolderNavigation,
+      consumeFolderTrackNavigation,
       consumeReturnState,
     }),
     [
+      artistFolderOrigin,
       artistTrackOrigin,
+      consumeArtistFolderNavigation,
       consumeArtistTrackNavigation,
+      consumeFolderTrackNavigation,
       consumeReturnState,
+      folderTrackOrigin,
+      markArtistFolderNavigation,
       markArtistTrackNavigation,
-      markRecordingNavigation,
-      originTrackId,
+      markDirectoryNavigation,
+      markFolderTrackNavigation,
+      originEntryId,
       returnState,
       updateDirectoryState,
     ],
@@ -200,9 +299,9 @@ export function useDiscoverReturnState() {
   return context;
 }
 
-export function BackToDiscover({ trackId }: { trackId?: string }) {
+export function BackToDiscover({ entryId }: { entryId?: string }) {
   const router = useRouter();
-  const { consumeReturnState, originTrackId } = useDiscoverReturnState();
+  const { consumeReturnState, originEntryId } = useDiscoverReturnState();
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -218,10 +317,10 @@ export function BackToDiscover({ trackId }: { trackId?: string }) {
 
     event.preventDefault();
 
-    if (trackId && consumeReturnState(trackId)) {
+    if (entryId && consumeReturnState(entryId)) {
       router.back();
     } else {
-      if (!trackId && originTrackId) consumeReturnState(originTrackId);
+      if (!entryId && originEntryId) consumeReturnState(originEntryId);
       router.push("/");
     }
   }
@@ -229,6 +328,59 @@ export function BackToDiscover({ trackId }: { trackId?: string }) {
   return (
     <Link href="/" onClick={handleClick}>
       ← discover
+    </Link>
+  );
+}
+
+export function FolderPageBackLink({
+  artistId,
+  artistName,
+  folderId,
+}: {
+  artistId: string;
+  artistName: string;
+  folderId: string;
+}) {
+  const router = useRouter();
+  const {
+    artistFolderOrigin,
+    consumeArtistFolderNavigation,
+  } = useDiscoverReturnState();
+  const isFromArtist =
+    artistFolderOrigin?.artistId === artistId &&
+    artistFolderOrigin.folderId === folderId;
+
+  if (!isFromArtist) {
+    return <BackToDiscover entryId={`folder:${folderId}`} />;
+  }
+
+  function handleArtistClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (consumeArtistFolderNavigation(folderId, artistId)) {
+      router.back();
+    } else {
+      router.push(`/artists/${encodeURIComponent(artistId)}`);
+    }
+  }
+
+  return (
+    <Link
+      href={`/artists/${encodeURIComponent(artistId)}`}
+      onClick={handleArtistClick}
+    >
+      ← {artistName}
     </Link>
   );
 }
@@ -246,14 +398,24 @@ export function RecordingPageBackLink({
   const {
     artistTrackOrigin,
     consumeArtistTrackNavigation,
+    consumeFolderTrackNavigation,
+    folderTrackOrigin,
   } = useDiscoverReturnState();
+  const isFromFolder = folderTrackOrigin?.trackId === trackId;
   const isFromArtist =
     artistTrackOrigin?.artistId === artistId &&
     artistTrackOrigin.trackId === trackId;
 
-  if (!isFromArtist) return <BackToDiscover trackId={trackId} />;
+  if (!isFromFolder && !isFromArtist) {
+    return <BackToDiscover entryId={`track:${trackId}`} />;
+  }
 
-  function handleArtistClick(event: MouseEvent<HTMLAnchorElement>) {
+  const href = isFromFolder
+    ? `/artists/${encodeURIComponent(folderTrackOrigin.artistId)}/folders/${encodeURIComponent(folderTrackOrigin.folderId)}`
+    : `/artists/${encodeURIComponent(artistId)}`;
+  const label = isFromFolder ? folderTrackOrigin.folderName : artistName;
+
+  function handleOriginClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
@@ -267,19 +429,20 @@ export function RecordingPageBackLink({
 
     event.preventDefault();
 
-    if (consumeArtistTrackNavigation(trackId, artistId)) {
+    const consumed = isFromFolder
+      ? consumeFolderTrackNavigation(trackId, folderTrackOrigin.folderId)
+      : consumeArtistTrackNavigation(trackId, artistId);
+
+    if (consumed) {
       router.back();
     } else {
-      router.push(`/artists/${encodeURIComponent(artistId)}`);
+      router.push(href);
     }
   }
 
   return (
-    <Link
-      href={`/artists/${encodeURIComponent(artistId)}`}
-      onClick={handleArtistClick}
-    >
-      ← {artistName}
+    <Link href={href} onClick={handleOriginClick}>
+      ← {label}
     </Link>
   );
 }

@@ -201,7 +201,11 @@ async function putFile(
   }
 }
 
-export function UploadForm() {
+export function UploadForm({
+  initialFolders,
+}: {
+  initialFolders: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
   const [artworkPreview, setArtworkPreview] = useState<{
@@ -244,6 +248,7 @@ export function UploadForm() {
       artworkValue instanceof File && artworkValue.size > 0
         ? artworkValue
         : null;
+    const folderId = String(formData.get("folderId") ?? "").trim() || null;
 
     if (!(audio instanceof File) || audio.size < 1) {
       setErrorMessage("Choose an audio file.");
@@ -280,6 +285,7 @@ export function UploadForm() {
               ? { name: artwork.name, size: artwork.size, type: artwork.type }
               : null,
             durationSeconds,
+            folderId,
           }),
         });
       } catch {
@@ -416,6 +422,25 @@ export function UploadForm() {
                     />
                   ) : null}
                 </div>
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">
+                <label htmlFor="upload-folder">folder</label>
+              </th>
+              <td>
+                <select
+                  disabled={isUploading}
+                  id="upload-folder"
+                  name="folderId"
+                >
+                  <option value="">no folder</option>
+                  {initialFolders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
               </td>
             </tr>
             <tr>

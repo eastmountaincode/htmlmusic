@@ -342,7 +342,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 export function PersistentAudioPlayer() {
   const { audioRef, currentTrack, error, stop } = useAudioPlayer();
   const pathname = usePathname();
-  const { markRecordingNavigation } = useDiscoverReturnState();
+  const { markDirectoryNavigation } = useDiscoverReturnState();
 
   function handleArtistLinkClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -359,11 +359,13 @@ export function PersistentAudioPlayer() {
     }
 
     const anchorViewportTop =
-      document.getElementById(currentTrack.id)?.getBoundingClientRect().top ??
+      document
+        .getElementById(`track:${currentTrack.id}`)
+        ?.getBoundingClientRect().top ??
       null;
 
-    markRecordingNavigation(
-      currentTrack.id,
+    markDirectoryNavigation(
+      `track:${currentTrack.id}`,
       window.scrollY,
       anchorViewportTop,
     );

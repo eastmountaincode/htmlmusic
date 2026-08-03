@@ -522,6 +522,54 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   color: #990000;
 }
 
+.profile-track__folder {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.profile-track__folder select {
+  min-width: 8rem;
+  max-width: min(100%, 20rem);
+}
+
+.folder-manager__create {
+  display: grid;
+  grid-template-columns: auto minmax(8rem, 1fr) auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.folder-manager__list {
+  margin-top: 0.75rem;
+}
+
+.folder-manager__row {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.25rem;
+  padding: 0.25rem 0;
+}
+
+.folder-manager__name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.folder-manager__row a.folder-manager__name {
+  color: #0000ee;
+  text-decoration: underline;
+}
+
+.folder-manager__count {
+  white-space: nowrap;
+}
+
 .auth-form {
   display: grid;
   gap: 0.75rem;
@@ -619,6 +667,11 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   min-width: 0;
   max-width: 100%;
   padding: 0;
+  cursor: pointer;
+}
+
+.upload-table select {
+  width: min(100%, 24rem);
   cursor: pointer;
 }
 
@@ -790,11 +843,16 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 }
 
 .river-file__cells {
+  --river-length-width: 3.5rem;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.45fr) 8rem 3.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.45fr) 8rem var(--river-length-width);
   column-gap: 0.75rem;
   align-items: center;
   min-width: 0;
+}
+
+.river-folder .river-file__cells {
+  --river-length-width: 5rem;
 }
 
 .river-file__credits {
@@ -952,6 +1010,28 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 }
 
 @media (max-width: 640px) {
+  .folder-manager__create {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .folder-manager__create label {
+    grid-column: 1 / -1;
+  }
+
+  .folder-manager__row {
+    grid-template-columns: 22px minmax(0, 1fr) auto;
+  }
+
+  .folder-manager__count {
+    grid-column: 2;
+    font-size: 14px;
+  }
+
+  .folder-manager__row button {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+
   body {
     font-size: 17px;
   }

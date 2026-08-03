@@ -1,10 +1,16 @@
 import "server-only";
 
-import type { RiverSong } from "@/components/river-recording-row";
+import type {
+  RiverEntry,
+  RiverFolder,
+  RiverSong,
+} from "@/components/river-recording-row";
+import { listPublishedFolders, type StoredFolder } from "@/db/folders";
 import {
   getPublishedRecording,
   listPublishedRecordingsByOwner,
-  listPublishedRecordings,
+  listPublishedLooseRecordings,
+  listPublishedRecordingsByFolder,
   publishedRecordingExists,
   type StoredRecording,
 } from "@/db/recordings";
@@ -53,6 +59,8 @@ export function storedRecordingToRiverSong(
     filename: recording.filename,
     artist: recording.artist,
     artistId: recording.ownerId,
+    folderId: recording.folderId,
+    folderName: recording.folderName,
     src: `/api/media/${encodeURIComponent(recording.id)}/audio`,
     artwork: recording.artworkKey
       ? `/api/media/${encodeURIComponent(recording.id)}/artwork`
@@ -61,6 +69,20 @@ export function storedRecordingToRiverSong(
     length: formatDuration(recording.durationSeconds),
     posted: formatPosted(recording.createdAt),
     postedAt: recording.createdAt,
+  };
+}
+
+export function storedFolderToRiverFolder(folder: StoredFolder): RiverFolder {
+  const activityAt = folder.activityAt ?? folder.createdAt;
+
+  return {
+    id: folder.id,
+    name: folder.name,
+    artist: folder.artist,
+    artistId: folder.ownerId,
+    trackCount: folder.trackCount,
+    posted: formatPosted(activityAt),
+    postedAt: activityAt,
   };
 }
 
@@ -79,25 +101,74 @@ export async function getArtistRiverSongs(ownerId: string) {
   );
 }
 
-async function getAllRiverSongs() {
-  return (await listPublishedRecordings()).map(storedRecordingToRiverSong);
+export async function getFolderRiverSongs(folderId: string, ownerId: string) {
+  return (await listPublishedRecordingsByFolder(folderId, ownerId)).map(
+    storedRecordingToRiverSong,
+  );
+}
+
+export async function getArtistRiverEntries(ownerId: string) {
+  return getAllRiverEntries(ownerId);
+}
+
+async function getAllRiverEntries(ownerId: string | null = null) {
+  const [recordings, folders] = await Promise.all([
+    listPublishedLooseRecordings(ownerId),
+    listPublishedFolders(ownerId),
+  ]);
+  const entries: RiverEntry[] = [
+    ...recordings.map(
+      (recording): RiverEntry => ({
+        kind: "track",
+        song: storedRecordingToRiverSong(recording),
+      }),
+    ),
+    ...folders.map(
+      (folder): RiverEntry => ({
+        kind: "folder",
+        folder: storedFolderToRiverFolder(folder),
+      }),
+    ),
+  ];
+
+  return entries.sort((left, right) => {
+    const leftDate =
+      left.kind === "track" ? left.song.postedAt : left.folder.postedAt;
+    const rightDate =
+      right.kind === "track" ? right.song.postedAt : right.folder.postedAt;
+    const dateOrder = rightDate.localeCompare(leftDate);
+
+    if (dateOrder !== 0) return dateOrder;
+
+    const leftId = left.kind === "track" ? left.song.id : left.folder.id;
+    const rightId = right.kind === "track" ? right.song.id : right.folder.id;
+    return rightId.localeCompare(leftId);
+  });
 }
 
 export async function getRiverPage(cursor: string | null) {
-  const riverSongs = await getAllRiverSongs();
+  const entries = await getAllRiverEntries();
   const cursorIndex = cursor
-    ? riverSongs.findIndex((song) => song.id === cursor)
+    ? entries.findIndex((entry) => {
+        const id = entry.kind === "track" ? entry.song.id : entry.folder.id;
+        return `${entry.kind}:${id}` === cursor;
+      })
     : -1;
 
   if (cursor && cursorIndex === -1) return null;
 
   const startIndex = cursorIndex + 1;
-  const songs = riverSongs.slice(startIndex, startIndex + RIVER_PAGE_SIZE);
-  const lastSong = songs.at(-1);
-  const hasMore = startIndex + songs.length < riverSongs.length;
+  const pageEntries = entries.slice(startIndex, startIndex + RIVER_PAGE_SIZE);
+  const lastEntry = pageEntries.at(-1);
+  const hasMore = startIndex + pageEntries.length < entries.length;
+  const nextCursor = lastEntry
+    ? `${lastEntry.kind}:${
+        lastEntry.kind === "track" ? lastEntry.song.id : lastEntry.folder.id
+      }`
+    : null;
 
   return {
-    nextCursor: hasMore && lastSong ? lastSong.id : null,
-    songs,
+    entries: pageEntries,
+    nextCursor: hasMore ? nextCursor : null,
   };
 }
