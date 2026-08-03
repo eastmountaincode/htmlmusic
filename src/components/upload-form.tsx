@@ -16,6 +16,8 @@ type UploadTarget = {
   uploadUrl: string;
 };
 
+type UploadStage = "audio" | "artwork";
+
 type InitializeUploadResponse = {
   id?: string;
   audio?: UploadTarget;
@@ -73,21 +75,129 @@ async function readAudioDuration(file: File) {
   }
 }
 
-async function putFile(file: File, target: UploadTarget) {
-  let response: Response;
+function storageHost(uploadUrl: string) {
+  try {
+    return new URL(uploadUrl).host;
+  } catch {
+    return "unknown";
+  }
+}
+
+async function reportStorageFailure({
+  attempt,
+  error,
+  file,
+  recordingId,
+  responseStatus,
+  stage,
+  target,
+}: {
+  attempt: number;
+  error?: unknown;
+  file: File;
+  recordingId: string;
+  responseStatus?: number;
+  stage: UploadStage;
+  target: UploadTarget;
+}) {
+  const errorName =
+    error instanceof Error
+      ? error.name
+      : responseStatus
+        ? "StorageResponse"
+        : "UnknownError";
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : responseStatus
+        ? `HTTP ${responseStatus}`
+        : String(error);
 
   try {
-    response = await fetch(target.uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": target.contentType },
-      body: file,
+    await fetch("/api/uploads/client-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attempt,
+        errorMessage,
+        errorName,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        recordingId,
+        responseStatus,
+        stage,
+        storageHost: storageHost(target.uploadUrl),
+      }),
+      keepalive: true,
     });
   } catch {
-    throw new Error(`${file.name} could not reach storage. Try again.`);
+    // The original storage error remains the useful message for the listener.
   }
+}
 
-  if (!response.ok) {
-    throw new Error(`${file.name} could not be uploaded.`);
+async function cleanUpFailedUpload(recordingId: string) {
+  try {
+    await fetch(`/api/recordings/${encodeURIComponent(recordingId)}`, {
+      method: "DELETE",
+    });
+  } catch {
+    // A pending upload is hidden from Discover and can be cleaned up later.
+  }
+}
+
+async function putFile(
+  file: File,
+  target: UploadTarget,
+  { recordingId, stage }: { recordingId: string; stage: UploadStage },
+) {
+  const attempts = 2;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    let response: Response;
+
+    try {
+      response = await fetch(target.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": target.contentType },
+        body: file,
+      });
+    } catch (error) {
+      if (attempt < attempts) {
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 750));
+        continue;
+      }
+
+      await Promise.allSettled([
+        reportStorageFailure({
+          attempt,
+          error,
+          file,
+          recordingId,
+          stage,
+          target,
+        }),
+        cleanUpFailedUpload(recordingId),
+      ]);
+      throw new Error(`${file.name} could not reach storage. Try again.`);
+    }
+
+    if (!response.ok) {
+      await Promise.allSettled([
+        reportStorageFailure({
+          attempt,
+          file,
+          recordingId,
+          responseStatus: response.status,
+          stage,
+          target,
+        }),
+        cleanUpFailedUpload(recordingId),
+      ]);
+      throw new Error(`${file.name} could not be uploaded.`);
+    }
+
+    return;
   }
 }
 
@@ -184,12 +294,18 @@ export function UploadForm() {
 
       setProgress(2);
       setStatus("uploading recording");
-      await putFile(audio, initialized.audio);
+      await putFile(audio, initialized.audio, {
+        recordingId: initialized.id,
+        stage: "audio",
+      });
 
       if (artwork && initialized.artwork) {
         setProgress(3);
         setStatus("uploading cover");
-        await putFile(artwork, initialized.artwork);
+        await putFile(artwork, initialized.artwork, {
+          recordingId: initialized.id,
+          stage: "artwork",
+        });
       }
 
       setProgress(4);
