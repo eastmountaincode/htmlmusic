@@ -428,10 +428,16 @@ export function UploadForm() {
           <button aria-busy={isUploading} disabled={isUploading} type="submit">
             {isUploading ? "uploading..." : "upload"}
           </button>
-          {status ? <span aria-live="polite">{status}</span> : null}
+          {status && !completedPath ? (
+            <span aria-live="polite">{status}</span>
+          ) : null}
         </p>
-        {isUploading ? (
-          <progress aria-label={status} max="5" value={progress} />
+        {isUploading || completedPath ? (
+          <progress
+            aria-label={completedPath ? "upload is complete" : status}
+            max="5"
+            value={progress}
+          />
         ) : null}
         {errorMessage ? (
           <p aria-live="polite" className="upload-form__error">
@@ -439,12 +445,10 @@ export function UploadForm() {
           </p>
         ) : null}
         {completedPath ? (
-          <p aria-live="polite">
-            <button
-              onClick={() => router.push(completedPath)}
-              type="button"
-            >
-              upload is complete
+          <p aria-live="polite" className="upload-form__actions">
+            <span>upload is complete</span>
+            <button onClick={() => router.push(completedPath)} type="button">
+              view track
             </button>
           </p>
         ) : null}
