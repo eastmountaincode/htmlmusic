@@ -3,7 +3,6 @@
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { getArtistName } from "@/lib/artist-name";
 import {
@@ -202,7 +201,6 @@ async function putFile(
 }
 
 export function UploadForm() {
-  const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
   const [artworkPreview, setArtworkPreview] = useState<{
     name: string;
@@ -212,6 +210,7 @@ export function UploadForm() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [completedPath, setCompletedPath] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -263,6 +262,7 @@ export function UploadForm() {
     setProgress(1);
     setStatus("preparing upload");
     setErrorMessage("");
+    setCompletedPath(null);
 
     try {
       const durationSeconds = await readAudioDuration(audio);
@@ -330,11 +330,10 @@ export function UploadForm() {
       }
 
       setProgress(5);
-      setStatus("uploaded");
+      setStatus("");
       form.reset();
       setArtworkPreview(null);
-      router.push(completed.path);
-      router.refresh();
+      setCompletedPath(completed.path);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "The upload failed.",
@@ -435,6 +434,14 @@ export function UploadForm() {
         {errorMessage ? (
           <p aria-live="polite" className="upload-form__error">
             {errorMessage}
+          </p>
+        ) : null}
+        {completedPath ? (
+          <p aria-live="polite">
+            Hey, upload is complete.{" "}
+            <Link className="plain-link" href={completedPath}>
+              view track
+            </Link>
           </p>
         ) : null}
       </form>
