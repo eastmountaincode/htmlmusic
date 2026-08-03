@@ -445,7 +445,10 @@ export function UploadForm() {
           </p>
         ) : null}
         {completedPath ? (
-          <p aria-live="polite" className="upload-form__actions">
+          <p
+            aria-live="polite"
+            className="upload-form__actions upload-form__actions--complete"
+          >
             <span>upload is complete</span>
             <button onClick={() => router.push(completedPath)} type="button">
               view track

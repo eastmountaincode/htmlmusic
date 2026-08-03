@@ -666,6 +666,10 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   margin-bottom: 0.5rem;
 }
 
+.upload-form__actions--complete {
+  margin-top: 0.5rem;
+}
+
 .upload-form progress {
   display: block;
   width: 100%;
