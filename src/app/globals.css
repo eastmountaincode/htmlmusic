@@ -561,6 +561,17 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   overflow-wrap: anywhere;
 }
 
+.folder-manager__rename {
+  display: grid;
+  grid-template-columns: minmax(6rem, 1fr) auto auto;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.folder-manager__rename input {
+  min-width: 0;
+}
+
 .folder-manager__row a.folder-manager__name {
   color: #0000ee;
   text-decoration: underline;
@@ -568,6 +579,11 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 
 .folder-manager__count {
   white-space: nowrap;
+}
+
+.folder-manager__actions {
+  display: flex;
+  gap: 0.35rem;
 }
 
 .auth-form {
@@ -1027,9 +1043,18 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
     font-size: 14px;
   }
 
-  .folder-manager__row button {
+  .folder-manager__actions {
     grid-column: 3;
     grid-row: 1 / span 2;
+  }
+
+  .folder-manager__rename {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .folder-manager__rename input {
+    flex: 1 1 8rem;
   }
 
   body {

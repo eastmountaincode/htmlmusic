@@ -22,6 +22,8 @@ export function FolderManager({
 }) {
   const [folders, setFolders] = useState(initialFolders);
   const [isCreating, setIsCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -68,8 +70,60 @@ export function FolderManager({
     }
   }
 
+  async function renameFolder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingId || savingId || deletingId) return;
+
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const name = String(data.get("name") ?? "").trim();
+    const folderId = editingId;
+
+    setSavingId(folderId);
+    setErrorMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/folders/${encodeURIComponent(folderId)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        },
+      );
+      const payload = (await response.json()) as {
+        error?: string;
+        folder?: { id: string; name: string };
+      };
+
+      if (!response.ok || payload.folder?.id !== folderId) {
+        throw new Error(payload.error ?? "The folder could not be renamed.");
+      }
+
+      const renamedFolder = payload.folder;
+      setFolders((currentFolders) =>
+        currentFolders
+          .map((folder) =>
+            folder.id === folderId
+              ? { ...folder, name: renamedFolder.name }
+              : folder,
+          )
+          .sort((left, right) => left.name.localeCompare(right.name)),
+      );
+      setEditingId(null);
+    } catch (renameError) {
+      setErrorMessage(
+        renameError instanceof Error
+          ? renameError.message
+          : "The folder could not be renamed.",
+      );
+    } finally {
+      setSavingId(null);
+    }
+  }
+
   async function deleteFolder(folder: ManagedFolder) {
-    if (deletingId) return;
+    if (deletingId || savingId) return;
     if (
       !window.confirm(
         `Delete “${folder.name}”? Its tracks will remain uploaded without a folder.`,
@@ -134,7 +188,40 @@ export function FolderManager({
                 unoptimized
                 width={20}
               />
-              {folder.trackCount > 0 ? (
+              {editingId === folder.id ? (
+                <form
+                  className="folder-manager__rename"
+                  onSubmit={renameFolder}
+                >
+                  <input
+                    aria-label={`Name for ${folder.name}`}
+                    autoFocus
+                    defaultValue={folder.name}
+                    disabled={savingId === folder.id}
+                    maxLength={FOLDER_NAME_MAX_LENGTH}
+                    name="name"
+                    required
+                    type="text"
+                  />
+                  <button
+                    aria-busy={savingId === folder.id}
+                    disabled={savingId === folder.id}
+                    type="submit"
+                  >
+                    {savingId === folder.id ? "saving..." : "save"}
+                  </button>
+                  <button
+                    disabled={savingId === folder.id}
+                    onClick={() => {
+                      setEditingId(null);
+                      setErrorMessage("");
+                    }}
+                    type="button"
+                  >
+                    cancel
+                  </button>
+                </form>
+              ) : folder.trackCount > 0 ? (
                 <Link
                   className="folder-manager__name"
                   href={folderPath(folder)}
@@ -148,14 +235,29 @@ export function FolderManager({
               <span className="folder-manager__count">
                 {folder.trackCount} {folder.trackCount === 1 ? "track" : "tracks"}
               </span>
-              <button
-                aria-label={`Delete ${folder.name}`}
-                disabled={deletingId !== null}
-                onClick={() => void deleteFolder(folder)}
-                type="button"
-              >
-                {deletingId === folder.id ? "deleting..." : "delete"}
-              </button>
+              {editingId === folder.id ? null : (
+                <span className="folder-manager__actions">
+                  <button
+                    aria-label={`Rename ${folder.name}`}
+                    disabled={deletingId !== null || savingId !== null}
+                    onClick={() => {
+                      setEditingId(folder.id);
+                      setErrorMessage("");
+                    }}
+                    type="button"
+                  >
+                    rename
+                  </button>
+                  <button
+                    aria-label={`Delete ${folder.name}`}
+                    disabled={deletingId !== null || savingId !== null}
+                    onClick={() => void deleteFolder(folder)}
+                    type="button"
+                  >
+                    {deletingId === folder.id ? "deleting..." : "delete"}
+                  </button>
+                </span>
+              )}
             </li>
           ))}
         </ol>

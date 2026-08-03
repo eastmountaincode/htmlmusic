@@ -116,6 +116,19 @@ export async function listPublishedFolders(
   return rows.map(fromFolderRow);
 }
 
+export async function updateOwnedFolderName(
+  id: string,
+  ownerId: string,
+  name: string,
+) {
+  await runD1(
+    `UPDATE folders
+     SET name = ?
+     WHERE id = ? AND owner_id = ?`,
+    [name, id, ownerId],
+  );
+}
+
 export async function deleteOwnedFolder(id: string, ownerId: string) {
   await runD1(
     `UPDATE recordings
