@@ -3,6 +3,7 @@
 import { useUser } from "@clerk/nextjs";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { getArtistName } from "@/lib/artist-name";
 import {
@@ -201,6 +202,7 @@ async function putFile(
 }
 
 export function UploadForm() {
+  const router = useRouter();
   const { isLoaded, isSignedIn, user } = useUser();
   const [artworkPreview, setArtworkPreview] = useState<{
     name: string;
@@ -438,10 +440,12 @@ export function UploadForm() {
         ) : null}
         {completedPath ? (
           <p aria-live="polite">
-            Hey, upload is complete.{" "}
-            <Link className="plain-link" href={completedPath}>
-              view track
-            </Link>
+            <button
+              onClick={() => router.push(completedPath)}
+              type="button"
+            >
+              upload is complete
+            </button>
           </p>
         ) : null}
       </form>
