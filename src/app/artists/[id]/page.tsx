@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getArtistRiverSongs } from "@/app/river-songs";
+import { BackToDiscover } from "@/components/discover-return-state";
 import { ProfileTracks } from "@/components/profile-tracks";
 import { getArtistProfile } from "@/db/profiles";
 
@@ -20,6 +21,9 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
   return (
     <main>
       <section className="page-shell artist-page">
+        <p className="artist-page__back">
+          <BackToDiscover />
+        </p>
         <ProfileTracks
           initialTracks={tracks}
           key={profile.userId}

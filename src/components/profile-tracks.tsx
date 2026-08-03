@@ -2,11 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import {
   HtmlAudioControls,
   useAudioPlayer,
 } from "@/components/persistent-audio-player";
+import { RiverComments } from "@/components/river-comments";
+import { RiverFile } from "@/components/river-directory";
 import {
   RiverRecordingCells,
   RiverRecordingIcon,
@@ -24,15 +26,46 @@ function ProfileTrack({
   onDelete?: (song: RiverSong) => void;
   song: RiverSong;
 }) {
+  const trackDetailsRef = useRef<HTMLDetailsElement>(null);
+
+  function keepDetailsOpen(event: MouseEvent<HTMLElement>) {
+    event.stopPropagation();
+  }
+
   return (
     <li
       aria-current={isCurrent ? "true" : undefined}
       className="river-file profile-track"
     >
-      <details name="profile-player">
-        <summary className="river-file__summary">
+      <details name="profile-player" ref={trackDetailsRef}>
+        <summary className="river-file__summary river-file__summary--with-actions">
           <RiverRecordingIcon song={song} />
           <RiverRecordingCells {...song} />
+          <span className="profile-track__actions">
+            <Link
+              aria-label={`Open page for ${song.filename}`}
+              className="river-file__permalink"
+              href={`/recordings/${song.id}`}
+              onClick={keepDetailsOpen}
+              prefetch={false}
+              title="Open track page"
+            >
+              →
+            </Link>
+            {onDelete ? (
+              <button
+                aria-label={`Delete ${song.filename}`}
+                disabled={isDeleting}
+                onClick={(event) => {
+                  keepDetailsOpen(event);
+                  onDelete(song);
+                }}
+                type="button"
+              >
+                {isDeleting ? "deleting..." : "delete"}
+              </button>
+            ) : null}
+          </span>
         </summary>
         <div
           className={`river-file__player${
@@ -50,29 +83,12 @@ function ProfileTrack({
             />
           ) : null}
           <HtmlAudioControls track={song} />
+          <RiverComments
+            trackDetailsRef={trackDetailsRef}
+            trackId={song.id}
+          />
         </div>
       </details>
-      <span className="profile-track__actions">
-        <Link
-          aria-label={`Open page for ${song.filename}`}
-          className="river-file__permalink"
-          href={`/recordings/${song.id}`}
-          prefetch={false}
-          title="Open track page"
-        >
-          →
-        </Link>
-        {onDelete ? (
-          <button
-            aria-label={`Delete ${song.filename}`}
-            disabled={isDeleting}
-            onClick={() => onDelete(song)}
-            type="button"
-          >
-            {isDeleting ? "deleting..." : "delete"}
-          </button>
-        ) : null}
-      </span>
     </li>
   );
 }
@@ -136,13 +152,21 @@ export function ProfileTracks({
       {tracks.length > 0 ? (
         <ol className="river-directory__list">
           {tracks.map((song) => (
-            <ProfileTrack
-              isCurrent={currentTrack?.id === song.id}
-              isDeleting={deletingId === song.id}
-              key={song.id}
-              onDelete={allowDelete ? (track) => void deleteTrack(track) : undefined}
-              song={song}
-            />
+            allowDelete ? (
+              <ProfileTrack
+                isCurrent={currentTrack?.id === song.id}
+                isDeleting={deletingId === song.id}
+                key={song.id}
+                onDelete={(track) => void deleteTrack(track)}
+                song={song}
+              />
+            ) : (
+              <RiverFile
+                isCurrent={currentTrack?.id === song.id}
+                key={song.id}
+                song={song}
+              />
+            )
           ))}
         </ol>
       ) : (

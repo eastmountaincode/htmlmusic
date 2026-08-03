@@ -20,18 +20,20 @@ import {
 } from "@/components/river-recording-row";
 import { RiverComments } from "@/components/river-comments";
 
-function RiverFile({
+export function RiverFile({
   isCurrent,
   onOpenPage,
   song,
 }: {
   isCurrent: boolean;
-  onOpenPage: (trackId: string) => void;
+  onOpenPage?: (trackId: string) => void;
   song: RiverSong;
 }) {
   const trackDetailsRef = useRef<HTMLDetailsElement>(null);
 
   function handlePageLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    event.stopPropagation();
+
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
@@ -43,7 +45,7 @@ function RiverFile({
       return;
     }
 
-    onOpenPage(song.id);
+    onOpenPage?.(song.id);
   }
 
   return (
@@ -53,12 +55,22 @@ function RiverFile({
       id={song.id}
     >
       <details name="river-player" ref={trackDetailsRef}>
-        <summary className="river-file__summary">
+        <summary className="river-file__summary river-file__summary--with-permalink">
           <RiverRecordingIcon song={song} />
           <RiverRecordingCells
             {...song}
             onArtistClick={handlePageLinkClick}
           />
+          <Link
+            aria-label={`Open page for ${song.filename}`}
+            className="river-file__permalink"
+            href={`/recordings/${song.id}`}
+            onClick={handlePageLinkClick}
+            prefetch={false}
+            title="Open track page"
+          >
+            →
+          </Link>
         </summary>
         <div
           className={`river-file__player${
@@ -83,16 +95,6 @@ function RiverFile({
           />
         </div>
       </details>
-      <Link
-        aria-label={`Open page for ${song.filename}`}
-        className="river-file__permalink"
-        href={`/recordings/${song.id}`}
-        onClick={handlePageLinkClick}
-        prefetch={false}
-        title="Open track page"
-      >
-        →
-      </Link>
     </li>
   );
 }

@@ -151,9 +151,9 @@ export function useDiscoverReturnState() {
   return context;
 }
 
-export function BackToDiscover({ trackId }: { trackId: string }) {
+export function BackToDiscover({ trackId }: { trackId?: string }) {
   const router = useRouter();
-  const { consumeReturnState } = useDiscoverReturnState();
+  const { consumeReturnState, originTrackId } = useDiscoverReturnState();
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -169,9 +169,10 @@ export function BackToDiscover({ trackId }: { trackId: string }) {
 
     event.preventDefault();
 
-    if (consumeReturnState(trackId)) {
+    if (trackId && consumeReturnState(trackId)) {
       router.back();
     } else {
+      if (!trackId && originTrackId) consumeReturnState(originTrackId);
       router.push("/");
     }
   }
