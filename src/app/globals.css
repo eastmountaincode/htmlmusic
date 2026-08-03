@@ -538,9 +538,10 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
 
 .folder-manager__create {
   display: grid;
-  grid-template-columns: auto minmax(8rem, 1fr) auto;
+  grid-template-columns: auto minmax(8rem, 1fr) auto auto;
   gap: 0.35rem;
   align-items: center;
+  margin-top: 0.5rem;
 }
 
 .folder-manager__list {

@@ -21,6 +21,7 @@ export function FolderManager({
   initialFolders: ManagedFolder[];
 }) {
   const [folders, setFolders] = useState(initialFolders);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -59,6 +60,7 @@ export function FolderManager({
         { ...folder, artistId },
       ].sort((left, right) => left.name.localeCompare(right.name)));
       form.reset();
+      setIsCreateFormOpen(false);
     } catch (createError) {
       setErrorMessage(
         createError instanceof Error
@@ -163,20 +165,46 @@ export function FolderManager({
   return (
     <fieldset className="plain-fieldset profile-tracks folder-manager">
       <legend>folders</legend>
-      <form className="folder-manager__create" onSubmit={createFolder}>
-        <label htmlFor="folder-name">new folder</label>
-        <input
-          disabled={isCreating}
-          id="folder-name"
-          maxLength={FOLDER_NAME_MAX_LENGTH}
-          name="name"
-          required
-          type="text"
-        />
-        <button aria-busy={isCreating} disabled={isCreating} type="submit">
-          {isCreating ? "creating..." : "create"}
+      {isCreateFormOpen ? (
+        <form className="folder-manager__create" onSubmit={createFolder}>
+          <label htmlFor="folder-name">folder name</label>
+          <input
+            autoFocus
+            disabled={isCreating}
+            id="folder-name"
+            maxLength={FOLDER_NAME_MAX_LENGTH}
+            name="name"
+            required
+            type="text"
+          />
+          <button aria-busy={isCreating} disabled={isCreating} type="submit">
+            {isCreating ? "creating..." : "create"}
+          </button>
+          <button
+            disabled={isCreating}
+            onClick={() => {
+              setIsCreateFormOpen(false);
+              setErrorMessage("");
+            }}
+            type="button"
+          >
+            cancel
+          </button>
+        </form>
+      ) : (
+        <button
+          disabled={
+            editingId !== null || savingId !== null || deletingId !== null
+          }
+          onClick={() => {
+            setIsCreateFormOpen(true);
+            setErrorMessage("");
+          }}
+          type="button"
+        >
+          new folder
         </button>
-      </form>
+      )}
       {folders.length > 0 ? (
         <ol className="river-directory__list folder-manager__list">
           {folders.map((folder) => (
@@ -241,6 +269,7 @@ export function FolderManager({
                     aria-label={`Rename ${folder.name}`}
                     disabled={deletingId !== null || savingId !== null}
                     onClick={() => {
+                      setIsCreateFormOpen(false);
                       setEditingId(folder.id);
                       setErrorMessage("");
                     }}
