@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRiverSong } from "@/app/river-songs";
-import { BackToDiscover } from "@/components/discover-return-state";
+import { RecordingPageBackLink } from "@/components/discover-return-state";
 import { HtmlAudioControls } from "@/components/persistent-audio-player";
 import { RecordingShare } from "@/components/recording-share";
 import { RiverComments } from "@/components/river-comments";
@@ -63,7 +63,10 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
     <main>
       <section className="page-shell recording-page">
         <p className="recording-page__back">
-          <BackToDiscover trackId={song.id} />
+          <RecordingPageBackLink
+            artistId={song.artistId}
+            trackId={song.id}
+          />
         </p>
         <fieldset className="plain-fieldset recording-page__fieldset">
           <legend>{song.filename}</legend>

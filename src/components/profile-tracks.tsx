@@ -9,6 +9,7 @@ import {
 } from "@/components/persistent-audio-player";
 import { RiverComments } from "@/components/river-comments";
 import { RiverFile } from "@/components/river-directory";
+import { useDiscoverReturnState } from "@/components/discover-return-state";
 import {
   RiverRecordingCells,
   RiverRecordingIcon,
@@ -103,6 +104,7 @@ export function ProfileTracks({
   legend?: string;
 }) {
   const { currentTrack, registerQueue, stop } = useAudioPlayer();
+  const { markArtistTrackNavigation } = useDiscoverReturnState();
   const [tracks, setTracks] = useState(initialTracks);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
@@ -164,6 +166,9 @@ export function ProfileTracks({
               <RiverFile
                 isCurrent={currentTrack?.id === song.id}
                 key={song.id}
+                onOpenTrackPage={(trackId) =>
+                  markArtistTrackNavigation(trackId, song.artistId)
+                }
                 song={song}
               />
             )

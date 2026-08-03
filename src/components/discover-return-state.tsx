@@ -23,7 +23,13 @@ export type DiscoverReturnState = {
   scrollY: number;
 };
 
+type ArtistTrackOrigin = {
+  artistId: string;
+  trackId: string;
+};
+
 type DiscoverReturnContextValue = {
+  artistTrackOrigin: ArtistTrackOrigin | null;
   returnState: DiscoverReturnState | null;
   originTrackId: string | null;
   updateDirectoryState: (
@@ -35,6 +41,11 @@ type DiscoverReturnContextValue = {
     scrollY: number,
     anchorViewportTop: number | null,
   ) => void;
+  markArtistTrackNavigation: (trackId: string, artistId: string) => void;
+  consumeArtistTrackNavigation: (
+    trackId: string,
+    artistId: string,
+  ) => boolean;
   consumeReturnState: (trackId: string) => DiscoverReturnState | null;
 };
 
@@ -44,8 +55,11 @@ const DiscoverReturnContext =
 export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const previousPathnameRef = useRef(pathname);
+  const artistTrackOriginRef = useRef<ArtistTrackOrigin | null>(null);
   const returnStateRef = useRef<DiscoverReturnState | null>(null);
   const originTrackIdRef = useRef<string | null>(null);
+  const [artistTrackOrigin, setArtistTrackOrigin] =
+    useState<ArtistTrackOrigin | null>(null);
   const [returnState, setReturnState] =
     useState<DiscoverReturnState | null>(null);
   const [originTrackId, setOriginTrackId] = useState<string | null>(null);
@@ -95,6 +109,33 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const markArtistTrackNavigation = useCallback(
+    (trackId: string, artistId: string) => {
+      const nextOrigin = { artistId, trackId };
+      artistTrackOriginRef.current = nextOrigin;
+      setArtistTrackOrigin(nextOrigin);
+    },
+    [],
+  );
+
+  const consumeArtistTrackNavigation = useCallback(
+    (trackId: string, artistId: string) => {
+      const currentOrigin = artistTrackOriginRef.current;
+
+      if (
+        currentOrigin?.trackId !== trackId ||
+        currentOrigin.artistId !== artistId
+      ) {
+        return false;
+      }
+
+      artistTrackOriginRef.current = null;
+      setArtistTrackOrigin(null);
+      return true;
+    },
+    [],
+  );
+
   useEffect(() => {
     const previousPathname = previousPathnameRef.current;
     previousPathnameRef.current = pathname;
@@ -103,8 +144,10 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
 
     returnStateRef.current = null;
     originTrackIdRef.current = null;
+    artistTrackOriginRef.current = null;
     setReturnState(null);
     setOriginTrackId(null);
+    setArtistTrackOrigin(null);
   }, [pathname]);
 
   const consumeReturnState = useCallback((trackId: string) => {
@@ -117,14 +160,20 @@ export function DiscoverReturnProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(
     () => ({
+      artistTrackOrigin,
       returnState,
       originTrackId,
       updateDirectoryState,
       markRecordingNavigation,
+      markArtistTrackNavigation,
+      consumeArtistTrackNavigation,
       consumeReturnState,
     }),
     [
+      artistTrackOrigin,
+      consumeArtistTrackNavigation,
       consumeReturnState,
+      markArtistTrackNavigation,
       markRecordingNavigation,
       originTrackId,
       returnState,
@@ -180,6 +229,55 @@ export function BackToDiscover({ trackId }: { trackId?: string }) {
   return (
     <Link href="/" onClick={handleClick}>
       ← discover
+    </Link>
+  );
+}
+
+export function RecordingPageBackLink({
+  artistId,
+  trackId,
+}: {
+  artistId: string;
+  trackId: string;
+}) {
+  const router = useRouter();
+  const {
+    artistTrackOrigin,
+    consumeArtistTrackNavigation,
+  } = useDiscoverReturnState();
+  const isFromArtist =
+    artistTrackOrigin?.artistId === artistId &&
+    artistTrackOrigin.trackId === trackId;
+
+  if (!isFromArtist) return <BackToDiscover trackId={trackId} />;
+
+  function handleArtistClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (consumeArtistTrackNavigation(trackId, artistId)) {
+      router.back();
+    } else {
+      router.push(`/artists/${encodeURIComponent(artistId)}`);
+    }
+  }
+
+  return (
+    <Link
+      href={`/artists/${encodeURIComponent(artistId)}`}
+      onClick={handleArtistClick}
+    >
+      ← artist
     </Link>
   );
 }

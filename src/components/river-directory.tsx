@@ -23,10 +23,12 @@ import { RiverComments } from "@/components/river-comments";
 export function RiverFile({
   isCurrent,
   onOpenPage,
+  onOpenTrackPage,
   song,
 }: {
   isCurrent: boolean;
   onOpenPage?: (trackId: string) => void;
+  onOpenTrackPage?: (trackId: string) => void;
   song: RiverSong;
 }) {
   const trackDetailsRef = useRef<HTMLDetailsElement>(null);
@@ -48,6 +50,23 @@ export function RiverFile({
     onOpenPage?.(song.id);
   }
 
+  function handleTrackPageLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    handlePageLinkClick(event);
+
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    onOpenTrackPage?.(song.id);
+  }
+
   return (
     <li
       aria-current={isCurrent ? "true" : undefined}
@@ -65,7 +84,7 @@ export function RiverFile({
             aria-label={`Open page for ${song.filename}`}
             className="river-file__permalink"
             href={`/recordings/${song.id}`}
-            onClick={handlePageLinkClick}
+            onClick={handleTrackPageLinkClick}
             prefetch={false}
             title="Open track page"
           >
