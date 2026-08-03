@@ -27,7 +27,7 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
         <ProfileDirectory
           initialEntries={entries}
           key={profile.userId}
-          legend={profile.artistName}
+          legend={`artist: ${profile.artistName}`}
         />
       </section>
     </main>

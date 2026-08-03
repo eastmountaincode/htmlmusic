@@ -53,7 +53,7 @@ export default async function FolderPage({ params }: FolderPageProps) {
           }}
           initialTracks={tracks}
           key={folder.id}
-          legend={folder.name}
+          legend={`folder: ${folder.name}`}
         />
       </section>
     </main>
