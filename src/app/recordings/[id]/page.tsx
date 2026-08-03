@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getRiverSong } from "@/app/river-songs";
 import { BackToDiscover } from "@/components/discover-return-state";
@@ -86,7 +87,14 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                 <tbody>
                   <tr>
                     <th scope="row">artist</th>
-                    <td>{song.artist}</td>
+                    <td>
+                      <Link
+                        href={`/artists/${encodeURIComponent(song.artistId)}`}
+                        prefetch={false}
+                      >
+                        {song.artist}
+                      </Link>
+                    </td>
                   </tr>
                   <tr>
                     <th scope="row">posted</th>

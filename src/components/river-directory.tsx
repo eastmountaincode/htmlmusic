@@ -55,7 +55,10 @@ function RiverFile({
       <details name="river-player" ref={trackDetailsRef}>
         <summary className="river-file__summary">
           <RiverRecordingIcon song={song} />
-          <RiverRecordingCells {...song} />
+          <RiverRecordingCells
+            {...song}
+            onArtistClick={handlePageLinkClick}
+          />
         </summary>
         <div
           className={`river-file__player${
@@ -74,6 +77,7 @@ function RiverFile({
           ) : null}
           <HtmlAudioControls track={song} />
           <RiverComments
+            onProfileLinkClick={handlePageLinkClick}
             trackDetailsRef={trackDetailsRef}
             trackId={song.id}
           />
@@ -171,6 +175,10 @@ export function RiverDirectory({
   useEffect(() => {
     registerQueue(songs);
   }, [registerQueue, songs]);
+
+  useEffect(() => {
+    updateDirectoryState(songs, nextCursor);
+  }, [nextCursor, songs, updateDirectoryState]);
 
   useEffect(() => {
     const scrollY = restoreScrollYRef.current;

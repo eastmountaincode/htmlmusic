@@ -8,6 +8,7 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type MouseEventHandler,
   type RefObject,
 } from "react";
 import type { RiverComment } from "@/db/comments";
@@ -52,10 +53,12 @@ function formatCommentTime(value: string) {
 
 export function RiverComments({
   loadImmediately = false,
+  onProfileLinkClick,
   trackDetailsRef,
   trackId,
 }: {
   loadImmediately?: boolean;
+  onProfileLinkClick?: MouseEventHandler<HTMLAnchorElement>;
   trackDetailsRef?: RefObject<HTMLDetailsElement | null>;
   trackId: string;
 }) {
@@ -205,7 +208,14 @@ export function RiverComments({
               <li key={comment.id}>
                 <p className="river-comments__text">{comment.body}</p>
                 <div className="river-comments__metadata">
-                  {comment.authorName},{" "}
+                  <Link
+                    href={`/artists/${encodeURIComponent(comment.authorId)}`}
+                    onClick={onProfileLinkClick}
+                    prefetch={false}
+                  >
+                    {comment.authorName}
+                  </Link>
+                  ,{" "}
                   <time dateTime={comment.createdAt}>
                     {formatCommentTime(comment.createdAt)}
                   </time>

@@ -1,4 +1,6 @@
 import Image from "next/image";
+import Link from "next/link";
+import type { MouseEventHandler } from "react";
 import type { AudioTrack } from "@/components/persistent-audio-player";
 
 export type RiverSong = AudioTrack & {
@@ -23,16 +25,27 @@ export function RiverRecordingIcon({ song }: { song: RiverSong }) {
 
 export function RiverRecordingCells({
   artist,
+  artistId,
   filename,
   length,
+  onArtistClick,
   posted,
   postedAt,
-}: RiverSong) {
+}: RiverSong & {
+  onArtistClick?: MouseEventHandler<HTMLAnchorElement>;
+}) {
   return (
     <span className="river-file__cells">
       <span className="river-file__name">{filename}</span>
       <span className="river-file__credits">
-        <span className="river-file__artist">{artist}</span>
+        <Link
+          className="river-file__artist"
+          href={`/artists/${encodeURIComponent(artistId)}`}
+          onClick={onArtistClick}
+          prefetch={false}
+        >
+          {artist}
+        </Link>
         <time className="river-file__posted" dateTime={postedAt}>
           {posted}
         </time>

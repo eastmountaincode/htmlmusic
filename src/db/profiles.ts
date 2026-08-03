@@ -1,6 +1,36 @@
 import "server-only";
 
-import { runD1 } from "@/db/d1";
+import { queryD1, runD1 } from "@/db/d1";
+
+export type ArtistProfile = {
+  userId: string;
+  artistName: string;
+};
+
+type ProfileRow = {
+  user_id: string;
+  artist_name: string;
+};
+
+export async function getArtistProfile(
+  userId: string,
+): Promise<ArtistProfile | null> {
+  const rows = await queryD1<ProfileRow>(
+    `SELECT user_id, artist_name
+     FROM profiles
+     WHERE user_id = ?
+     LIMIT 1`,
+    [userId],
+  );
+  const profile = rows[0];
+
+  return profile
+    ? {
+        userId: profile.user_id,
+        artistName: profile.artist_name,
+      }
+    : null;
+}
 
 export async function upsertProfile(
   userId: string,

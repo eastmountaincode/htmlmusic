@@ -494,16 +494,16 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   margin-bottom: 0.5rem;
 }
 
-.account-tracks {
+.profile-tracks {
   width: 100%;
   max-width: none;
 }
 
-.river-file.account-track {
+.river-file.profile-track {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
-.account-track__actions {
+.profile-track__actions {
   display: flex;
   flex-wrap: nowrap;
   align-items: start;
@@ -512,15 +512,15 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   white-space: nowrap;
 }
 
-.account-track__actions .river-file__permalink {
+.profile-track__actions .river-file__permalink {
   margin-top: 0;
 }
 
-.account-tracks__empty {
+.profile-tracks__empty {
   margin: 0.25rem 0 0;
 }
 
-.account-tracks__error {
+.profile-tracks__error {
   margin: 0.5rem 0 0;
   color: #990000;
 }
@@ -997,17 +997,17 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
     scroll-margin-top: 9rem;
   }
 
-  .river-file.account-track {
+  .river-file.profile-track {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 0.5rem;
   }
 
-  .account-track .river-file__summary {
+  .profile-track .river-file__summary {
     padding-right: 0;
   }
 
-  .account-track .river-file__permalink {
+  .profile-track .river-file__permalink {
     position: static;
     margin-top: 0;
   }

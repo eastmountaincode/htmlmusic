@@ -3,7 +3,7 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import { AccountTracks } from "@/components/account-tracks";
+import { ProfileTracks } from "@/components/profile-tracks";
 import type { RiverSong } from "@/components/river-recording-row";
 import {
   ARTIST_NAME_MAX_LENGTH,
@@ -130,7 +130,7 @@ export function AccountPanel({
         <AccountTabs activeTab={activeTab} />
         <fieldset
           className={`plain-fieldset${
-            activeTab === "tracks" ? " account-tracks" : ""
+            activeTab === "tracks" ? " profile-tracks" : ""
           }`}
         >
           <legend>{activeTab}</legend>
@@ -144,7 +144,7 @@ export function AccountPanel({
     <section className="page-shell account-page">
       <AccountTabs activeTab={activeTab} />
       {activeTab === "tracks" ? (
-        <AccountTracks initialTracks={initialTracks} />
+        <ProfileTracks allowDelete initialTracks={initialTracks} />
       ) : (
         <fieldset className="plain-fieldset">
           <legend>settings</legend>

@@ -3,7 +3,7 @@ import "server-only";
 import type { RiverSong } from "@/components/river-recording-row";
 import {
   getPublishedRecording,
-  listOwnedPublishedRecordings,
+  listPublishedRecordingsByOwner,
   listPublishedRecordings,
   publishedRecordingExists,
   type StoredRecording,
@@ -52,6 +52,7 @@ export function storedRecordingToRiverSong(
     id: recording.id,
     filename: recording.filename,
     artist: recording.artist,
+    artistId: recording.ownerId,
     src: `/api/media/${encodeURIComponent(recording.id)}/audio`,
     artwork: recording.artworkKey
       ? `/api/media/${encodeURIComponent(recording.id)}/artwork`
@@ -72,8 +73,8 @@ export async function isKnownRiverTrack(id: string) {
   return publishedRecordingExists(id);
 }
 
-export async function getOwnedRiverSongs(ownerId: string) {
-  return (await listOwnedPublishedRecordings(ownerId)).map(
+export async function getArtistRiverSongs(ownerId: string) {
+  return (await listPublishedRecordingsByOwner(ownerId)).map(
     storedRecordingToRiverSong,
   );
 }

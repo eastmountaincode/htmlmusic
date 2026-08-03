@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -9,14 +11,17 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent,
   type ReactNode,
   type RefObject,
 } from "react";
+import { useDiscoverReturnState } from "@/components/discover-return-state";
 
 export type AudioTrack = {
   id: string;
   filename: string;
   artist: string;
+  artistId: string;
   src: string;
   artwork?: string;
   duration?: number;
@@ -336,6 +341,33 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
 export function PersistentAudioPlayer() {
   const { audioRef, currentTrack, error, stop } = useAudioPlayer();
+  const pathname = usePathname();
+  const { markRecordingNavigation } = useDiscoverReturnState();
+
+  function handleArtistLinkClick(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      pathname !== "/" ||
+      !currentTrack ||
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    const anchorViewportTop =
+      document.getElementById(currentTrack.id)?.getBoundingClientRect().top ??
+      null;
+
+    markRecordingNavigation(
+      currentTrack.id,
+      window.scrollY,
+      anchorViewportTop,
+    );
+  }
 
   return (
     <>
@@ -369,7 +401,19 @@ export function PersistentAudioPlayer() {
                   <strong>
                     {currentTrack?.filename ?? "No file selected"}
                   </strong>
-                  {currentTrack ? <span>{currentTrack.artist}</span> : null}
+                  {currentTrack ? (
+                    <span>
+                      <Link
+                        href={`/artists/${encodeURIComponent(
+                          currentTrack.artistId,
+                        )}`}
+                        onClick={handleArtistLinkClick}
+                        prefetch={false}
+                      >
+                        {currentTrack.artist}
+                      </Link>
+                    </span>
+                  ) : null}
                 </span>
               </div>
               {currentTrack ? (

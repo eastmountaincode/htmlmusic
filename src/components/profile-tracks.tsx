@@ -13,7 +13,7 @@ import {
   type RiverSong,
 } from "@/components/river-recording-row";
 
-function AccountTrack({
+function ProfileTrack({
   isCurrent,
   isDeleting,
   onDelete,
@@ -21,15 +21,15 @@ function AccountTrack({
 }: {
   isCurrent: boolean;
   isDeleting: boolean;
-  onDelete: (song: RiverSong) => void;
+  onDelete?: (song: RiverSong) => void;
   song: RiverSong;
 }) {
   return (
     <li
       aria-current={isCurrent ? "true" : undefined}
-      className="river-file account-track"
+      className="river-file profile-track"
     >
-      <details name="account-player">
+      <details name="profile-player">
         <summary className="river-file__summary">
           <RiverRecordingIcon song={song} />
           <RiverRecordingCells {...song} />
@@ -52,7 +52,7 @@ function AccountTrack({
           <HtmlAudioControls track={song} />
         </div>
       </details>
-      <span className="account-track__actions">
+      <span className="profile-track__actions">
         <Link
           aria-label={`Open page for ${song.filename}`}
           className="river-file__permalink"
@@ -62,20 +62,30 @@ function AccountTrack({
         >
           →
         </Link>
-        <button
-          aria-label={`Delete ${song.filename}`}
-          disabled={isDeleting}
-          onClick={() => onDelete(song)}
-          type="button"
-        >
-          {isDeleting ? "deleting..." : "delete"}
-        </button>
+        {onDelete ? (
+          <button
+            aria-label={`Delete ${song.filename}`}
+            disabled={isDeleting}
+            onClick={() => onDelete(song)}
+            type="button"
+          >
+            {isDeleting ? "deleting..." : "delete"}
+          </button>
+        ) : null}
       </span>
     </li>
   );
 }
 
-export function AccountTracks({ initialTracks }: { initialTracks: RiverSong[] }) {
+export function ProfileTracks({
+  allowDelete = false,
+  initialTracks,
+  legend = "tracks",
+}: {
+  allowDelete?: boolean;
+  initialTracks: RiverSong[];
+  legend?: string;
+}) {
   const { currentTrack, registerQueue, stop } = useAudioPlayer();
   const [tracks, setTracks] = useState(initialTracks);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -86,7 +96,7 @@ export function AccountTracks({ initialTracks }: { initialTracks: RiverSong[] })
   }, [registerQueue, tracks]);
 
   async function deleteTrack(song: RiverSong) {
-    if (deletingId) return;
+    if (!allowDelete || deletingId) return;
     if (!window.confirm(`Delete “${song.filename}”? This cannot be undone.`)) {
       return;
     }
@@ -121,25 +131,25 @@ export function AccountTracks({ initialTracks }: { initialTracks: RiverSong[] })
   }
 
   return (
-    <fieldset className="plain-fieldset account-tracks">
-      <legend>tracks</legend>
+    <fieldset className="plain-fieldset profile-tracks">
+      <legend>{legend}</legend>
       {tracks.length > 0 ? (
         <ol className="river-directory__list">
           {tracks.map((song) => (
-            <AccountTrack
+            <ProfileTrack
               isCurrent={currentTrack?.id === song.id}
               isDeleting={deletingId === song.id}
               key={song.id}
-              onDelete={(track) => void deleteTrack(track)}
+              onDelete={allowDelete ? (track) => void deleteTrack(track) : undefined}
               song={song}
             />
           ))}
         </ol>
       ) : (
-        <p className="account-tracks__empty">no tracks uploaded</p>
+        <p className="profile-tracks__empty">no tracks uploaded</p>
       )}
       {errorMessage ? (
-        <p className="account-tracks__error" role="status">
+        <p className="profile-tracks__error" role="status">
           {errorMessage}
         </p>
       ) : null}

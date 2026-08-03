@@ -150,7 +150,7 @@ export async function listPublishedRecordings(limit = 500) {
   return rows.map(fromRecordingRow);
 }
 
-export async function listOwnedPublishedRecordings(
+export async function listPublishedRecordingsByOwner(
   ownerId: string,
   limit = 500,
 ) {
