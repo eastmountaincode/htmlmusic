@@ -65,6 +65,7 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
         <p className="recording-page__back">
           <RecordingPageBackLink
             artistId={song.artistId}
+            artistName={song.artist}
             trackId={song.id}
           />
         </p>

@@ -689,6 +689,12 @@ html.dev-outlines-on body [data-dev-outline="header-auth-account"] {
   margin-bottom: 0.5rem;
 }
 
+.recording-page__back a {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
 .artist-page a {
   color: #0000ee;
   text-decoration: underline;

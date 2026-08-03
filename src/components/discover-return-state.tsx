@@ -235,9 +235,11 @@ export function BackToDiscover({ trackId }: { trackId?: string }) {
 
 export function RecordingPageBackLink({
   artistId,
+  artistName,
   trackId,
 }: {
   artistId: string;
+  artistName: string;
   trackId: string;
 }) {
   const router = useRouter();
@@ -277,7 +279,7 @@ export function RecordingPageBackLink({
       href={`/artists/${encodeURIComponent(artistId)}`}
       onClick={handleArtistClick}
     >
-      ← artist
+      ← {artistName}
     </Link>
   );
 }
